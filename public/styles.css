@@ -1,0 +1,255 @@
+/* Styles the full page background, base font, and default text color */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #222;
+}
+
+/* Styles the top navigation bar container */
+.navbar {
+  background: #008EAA;
+  color: white;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Styles the clickable brand area that holds the logo and site title */
+.navbar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  font-size: 22px;
+}
+
+/* Controls the size and display behavior of the logo image */
+.navbar-logo {
+  height: 42px;
+  width: auto;
+  display: block;
+}
+
+/* Styles the navigation links on the right side of the navbar */
+.navbar a {
+  color: white;
+  text-decoration: none;
+  margin-left: 14px;
+  font-weight: bold;
+}
+
+/* Creates the main page area that centers content on the screen */
+.page {
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* Styles the main card used for the login and signup forms */
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 32px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+
+/* Styles the main page headings */
+h1 {
+  margin-top: 0;
+  text-align: center;
+  color: #008EAA;
+}
+
+/* Adds spacing below each form field group */
+.form-group {
+  margin-bottom: 16px;
+}
+
+/* Styles the text, email, and password input fields */
+.form-input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd3e0;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
+}
+
+/* Styles the main action button on forms */
+.btn {
+  width: 100%;
+  padding: 12px;
+  background: #008EAA;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+/* Styles the logout button shown in the navbar */
+.btn-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  color: white;
+  text-decoration: none;
+  margin-left: 14px;
+  font-weight: bold;
+}
+
+/* Changes the button color when the mouse hovers over it */
+.btn:hover {
+  background: #16306f;
+}
+
+/* wrapper for revealing password */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-input {
+  padding-right: 2.5rem;
+}
+
+/* Eye button to reveal password */
+.eye-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Styles the small text section under the forms */
+.small-text {
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* Styles the links inside the small text section */
+.small-text a {
+  color: #008EAA;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Styles the base flash message box */
+.flash {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+/* Styles success flash messages */
+.flash.success {
+  background: #e7f4e4;
+  color: #225c22;
+}
+
+/* Styles error flash messages */
+.flash.error {
+  background: #fde8e8;
+  color: #a12626;
+}
+
+/* Styles the centered content box used on the home page */
+.home-box {
+  max-width: 700px;
+  background: white;
+  padding: 36px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* Holds the action buttons shown on the home page when logged out */
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* Row of small secondary buttons (Clear) shown directly under the
+   primary submit button on forms, centered so the small buttons look balanced
+   beneath the full-width submit button */
+.form-secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+/* Simple horizontal centering wrapper used on the 404 page to center the
+   "Return to Home Screen" button inside the card */
+.center-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Centers inline text inside a block element, used on the 404 page */
+.text-center {
+  text-align: center;
+}
+
+/* Anchor-styled variant of .btn */
+.btn-link-action {
+  width: auto;
+  padding: 12px 22px;
+  text-decoration: none;
+  display: inline-block;
+  color: white;
+}
+
+.btn-link-action:hover {
+  color: white;
+}
+
+/* Smaller inline variant of .btn used for Clear/Cancel under forms */
+.btn-compact {
+  width: auto;
+  padding: 10px 18px;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+/* Secondary / neutral button color used for "Clear" and "Cancel" */
+.btn-secondary {
+  background: #6c7a94;
+}
+
+.btn-secondary:hover {
+  background: #4a566e;
+}
+
+/* Used so a form can sit inline in a navbar cell without adding its own
+   block-level layout. Replaces an inline style attribute that would be
+   blocked by helmet */
+.inline-form {
+  display: inline;
+}

@@ -1,0 +1,20 @@
+{
+  "name": "pcc-food-pantry-js",
+  "version": "1.0.0",
+  "description": "JavaScript/Node.js/Express.js PCC Food Pantry Project",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "connect-flash": "^0.1.1",
+    "dotenv": "^17.4.2",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.1",
+    "helmet": "^8.1.0",
+    "mysql2": "^3.11.0"
+  }
+}

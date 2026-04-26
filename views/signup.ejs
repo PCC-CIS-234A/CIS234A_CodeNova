@@ -1,0 +1,90 @@
+<%- include('partials/header', { title }) %>
+
+<div class="card">
+  <h1>Create Account</h1>
+
+  <%- include('partials/flash') %>
+
+  <form method="POST" action="/signup">
+    <div class="form-group">
+      <input
+        type="text"
+        name="username"
+        class="form-input"
+        placeholder="Username (3-30 characters, letters/numbers/. _ -)"
+        value="<%= (form && form.username) || '' %>"
+        pattern="[A-Za-z0-9._\-]{3,30}"
+        title="3-30 characters: letters, numbers, dot, underscore, or hyphen"
+        autocomplete="username"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <input
+        type="text"
+        name="first_name"
+        class="form-input"
+        placeholder="First name"
+        value="<%= (form && form.first_name) || '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <input
+        type="text"
+        name="last_name"
+        class="form-input"
+        placeholder="Last name"
+        value="<%= (form && form.last_name) || '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <input
+        type="email"
+        name="email"
+        class="form-input"
+        placeholder="Email address"
+        value="<%= (form && form.email) || '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group password-wrapper">
+      <input type="password" id="signup-password" name="password" class="form-input" placeholder="Password (Minimum 8 characters)" required />
+      <button type="button" class="eye-btn" aria-label="Show password">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <div class="form-group password-wrapper">
+      <input type="password" id="signup-confirm" name="confirm_password" class="form-input" placeholder="Confirm password" required />
+      <button type="button" class="eye-btn" aria-label="Show password">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <button type="submit" class="btn">Create Account</button>
+
+    <div class="form-secondary-actions">
+      <button type="reset" class="btn btn-compact btn-secondary">Clear</button>
+    </div>
+  </form>
+
+  <div class="small-text">
+    Already have an account?
+    <a href="/login">Login here</a>
+  </div>
+</div>
+
+<script src="/password-toggle.js"></script>
+<%- include('partials/footer') %>

@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title><%= title || 'PCC Food Pantry' %></title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="navbar">
+    <a href="/" class="navbar-brand">
+      <img src="/pcc-logo.png" alt="PCC Logo" class="navbar-logo" />
+      <span class="navbar-title">PCC Food Pantry</span>
+    </a>
+
+    <div>
+      <% if (currentUser) { %>
+        <span>Hello, <%= currentUser.first_name %>!&nbsp;&nbsp;&nbsp;</span>
+        <form method="POST" action="/logout" class="inline-form">
+          <button type="submit" class="btn-link">Logout</button>
+        </form>
+      <% } else { %>
+        <a href="/login">Login</a>
+        <a href="/signup">Create Account</a>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="page">

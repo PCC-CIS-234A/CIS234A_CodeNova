@@ -1,0 +1,50 @@
+<%- include('partials/header', { title }) %>
+
+<div class="card">
+  <h1>Login</h1>
+
+  <%- include('partials/flash') %>
+
+  <form method="POST" action="/login">
+    <!--
+      One identifier field accepts either the user's chosen username OR
+      their email. Type is "text" (not "email") so usernames don't trip
+      the browser's email-format validator.
+    -->
+    <div class="form-group">
+      <input
+        type="text"
+        name="identifier"
+        class="form-input"
+        placeholder="Username or Email"
+        value="<%= (form && form.identifier) || '' %>"
+        autocomplete="username"
+        required
+      />
+    </div>
+
+    <div class="form-group password-wrapper">
+      <input type="password" id="login-password" name="password" class="form-input" placeholder="Password" autocomplete="current-password" required />
+      <button type="button" class="eye-btn" aria-label="Show password">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+          <circle cx="12" cy="12" r="3"/>
+        </svg>
+      </button>
+    </div>
+
+    <button type="submit" class="btn">Login</button>
+
+    <div class="form-secondary-actions">
+      <button type="reset" class="btn btn-compact btn-secondary">Clear</button>
+    </div>
+  </form>
+
+  <div class="small-text">
+    Don't have an account?
+    <a href="/signup">Create one</a>
+  </div>
+</div>
+
+<script src="/password-toggle.js"></script>
+<%- include('partials/footer') %>
