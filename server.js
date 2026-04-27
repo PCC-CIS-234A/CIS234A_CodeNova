@@ -2,7 +2,7 @@
 
 Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis
 
-Noah McGarry - Account Creation/Login
+Noah McGarry - Account Creation/Login 4/26/2026
 
 Express + EJS + MySQL. Sessions for login state, bcrypt for password
 hashing, flash for messages
