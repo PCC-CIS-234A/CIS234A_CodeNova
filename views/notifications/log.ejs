@@ -1,0 +1,120 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="log-box">
+    <h1>Notification Log</h1>
+
+    <%- include('../partials/flash') %>
+
+    <form method="GET" action="/notifications/log" class="filter-bar">
+        <div class="filter-field">
+            <label class="form-label" for="from">From</label>
+            <input
+                    type="date"
+                    id="from"
+                    name="from"
+                    class="form-input"
+                    value="<%= filters.from || '' %>"
+            />
+        </div>
+
+        <div class="filter-field">
+            <label class="form-label" for="to">To</label>
+            <input
+                    type="date"
+                    id="to"
+                    name="to"
+                    class="form-input"
+                    value="<%= filters.to || '' %>"
+            />
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-compact">Apply</button>
+            <a href="/notifications/log" class="btn btn-compact btn-secondary btn-link-action">Clear</a>
+            <a href="/" class="btn btn-compact btn-secondary btn-link-action">Cancel</a>
+        </div>
+    </form>
+
+    <p class="log-summary">
+        Showing <%= notifications.length %>
+        notification<%= notifications.length === 1 ? '' : 's' %><% if (filters.from || filters.to) { %>
+            between <%= filters.from || 'the beginning' %> and <%= filters.to || 'today' %><% } %>.
+    </p>
+
+    <% if (notifications.length === 0) { %>
+        <div class="log-empty">No notifications match the current filter.</div>
+    <% } else { %>
+        <table class="log-table">
+            <thead>
+            <tr>
+                <th>Date Sent</th>
+                <th>Sent By</th>
+                <th>Subject</th>
+                <th>Message Body</th>
+                <th>Recipients</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <% notifications.forEach((n, index) => { %>
+                <tr>
+                    <td class="log-date"><%= n.sent_at_display %></td>
+                    <td><%= n.sender_email %></td>
+                    <td><%= n.subject %></td>
+
+                    <td class="log-body">
+              <span id="message-preview-<%= index %>">
+                <%= n.body.length > 60 ? n.body.substring(0, 60) + '...' : n.body %>
+              </span>
+
+                        <span id="message-full-<%= index %>" style="display: none;">
+                <%= n.body %>
+              </span>
+
+                        <% if (n.body.length > 60) { %>
+                            <div class="form-secondary-actions">
+                                <button
+                                        type="button"
+                                        class="btn btn-compact btn-secondary expand-btn"
+                                        data-index="<%= index %>"
+                                >
+                                    Expand
+                                </button>
+                            </div>
+                        <% } %>
+                    </td>
+
+                    <td class="log-recipients"><%= n.recipient_count %></td>
+                </tr>
+            <% }) %>
+            </tbody>
+        </table>
+    <% } %>
+
+    <div class="small-text">
+        <a href="/notifications/send">Send a new notification</a>
+    </div>
+</div>
+
+<script>
+    document.querySelectorAll(".expand-btn").forEach(button => {
+        button.addEventListener("click", function () {
+            const index = this.getAttribute("data-index");
+
+            const preview = document.getElementById(`message-preview-${index}`);
+            const full = document.getElementById(`message-full-${index}`);
+
+            if (full.style.display === "none") {
+                preview.style.display = "none";
+                full.style.display = "inline";
+                this.textContent = "Collapse";
+            } else {
+                preview.style.display = "inline";
+                full.style.display = "none";
+                this.textContent = "Expand";
+            }
+        });
+    });
+</script>
+
+<%- include('../partials/footer') %>
