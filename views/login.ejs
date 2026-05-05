@@ -48,6 +48,17 @@
     Don't have an account?
     <a href="/signup">Create one</a>
   </div>
+
+  <!-- DEV BYPASS: skip login as a test user with the chosen role.
+       Used to preview role-specific screens without typing credentials. -->
+  <div class="dev-bypass">
+    <div class="dev-bypass-label">Developer bypass</div>
+    <form method="POST" action="/dev/bypass" class="dev-bypass-row">
+      <button type="submit" name="role" value="manager" class="btn btn-compact">As Manager</button>
+      <button type="submit" name="role" value="staff" class="btn btn-compact">As Staff</button>
+      <button type="submit" name="role" value="subscriber" class="btn btn-compact">As Subscriber</button>
+    </form>
+  </div>
 </div>
 
 <script src="/password-toggle.js"></script>

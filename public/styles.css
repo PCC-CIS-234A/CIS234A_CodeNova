@@ -262,3 +262,43 @@ h1 {
 .inline-form {
   display: inline;
 }
+
+/* Developer bypass panel on the login page separated from the
+   real form so it is obviously dev-only */
+.dev-bypass {
+  margin-top: 24px;
+  padding: 14px;
+  border: 1px dashed #b39329;
+  border-radius: 8px;
+  background: #fff8df;
+}
+
+.dev-bypass-label {
+  font-size: 12px;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #8a6d10;
+  margin-bottom: 8px;
+  text-align: center;
+}
+
+.dev-bypass-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+}
+
+/* Role marker shown on the home screen under the welcome message. Temporary? */
+.role-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #e6f4f8;
+  color: #00657a;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: capitalize;
+}

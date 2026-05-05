@@ -86,11 +86,13 @@ async function signup(body) {
     throw new AuthError('The two passwords do not match.');
   }
 
+  // If username already exists/in use, non-specific error message
   if (await db.findUserByUsername(username)) {
-    throw new AuthError('That username is already taken.');
+    throw new AuthError('Could not create your account.');
   }
+  //If email already exists/in use, non-specific error message
   if (await db.findUserByEmail(email)) {
-    throw new AuthError('An account with that email already exists.');
+    throw new AuthError('Could not create your account.');
   }
 
   const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
@@ -134,6 +136,21 @@ async function getCurrentUser(userId) {
   return db.findUserById(userId);
 }
 
+/**
+ * DEV ONLY — log in as a placeholder user with the requested role so we
+ * can preview role-specific screens without entering credentials.
+ * Accepts the DB role values: manager, staff, subscriber/student. TEMPORARY. - Noah
+ */
+const DEV_BYPASS_ROLES = [ROLE_MANAGER, ROLE_STAFF, ROLE_SUBSCRIBER];
+async function devBypassLogin(role) {
+  const r = String(role || '').trim().toLowerCase();
+  if (!DEV_BYPASS_ROLES.includes(r)) {
+    throw new AuthError('Invalid dev bypass role.');
+  }
+  const userId = await db.findOrCreateDevUser(r);
+  return { userId };
+}
+
 /*
  * Orchestration. loads recipients from the DB
  * Sends email (BCC) to every user whose role is listed in
@@ -167,6 +184,7 @@ module.exports = {
   AuthError,
   signup,
   login,
+  devBypassLogin,
   getCurrentUser,
   sendBroadcastNotification,
   canUserSendNotifications,
