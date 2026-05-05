@@ -74,6 +74,15 @@ h1 {
   margin-bottom: 16px;
 }
 
+/* Styles the field name shown above each input */
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+}
+
 /* Styles the text, email, and password input fields */
 .form-input {
   width: 100%;
@@ -238,7 +247,7 @@ h1 {
   text-align: center;
 }
 
-/* Secondary / neutral button color used for "Clear" and "Cancel" */
+/* Secondary / neutral button color used for "Clear" */
 .btn-secondary {
   background: #6c7a94;
 }
