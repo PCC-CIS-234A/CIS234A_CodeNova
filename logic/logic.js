@@ -4,29 +4,29 @@
 
   Business rules for signup and login: input validation, password
   hashing, and the workflow that ties them together. Talks to the
-  data layer.
+  data layer via Sequelize models.
 
-  User-facing problems are thrown as `AuthError`, the application
+  User-facing problems are thrown as `AuthError`; the application
   layer turns those into flash messages.
 */
 
 const bcrypt = require('bcryptjs');
 const config = require('../config');
-const db = require('../data/database');
+const { sequelize, Op, User, Notification, NotificationRecipient } = require('../data/database');
 const { sendNotificationEmail } = require('./mail');
 
 const SALT_ROUNDS = 12;
 const USERNAME_RE = /^[A-Za-z0-9._-]{3,30}$/;
 
-/** Values stored in users.role (SQL Server) */
+/* Values stored in users.role (SQL Server). */
 const ROLE_MANAGER = 'manager';
 const ROLE_STAFF = 'staff';
 const ROLE_SUBSCRIBER = 'subscriber';
 
-/** Form values from signup */
+/* Form values from signup. */
 const SIGNUP_ROLES = ['student', 'manager', 'staff'];
 
-/**
+/*
  * Reads role from POST body (handles missing key, alternate names, or array duplicates).
  */
 function pickSignupRoleFromBody(body) {
@@ -44,10 +44,13 @@ function signupRoleToDbRole(signupRole) {
   return ROLE_SUBSCRIBER;
 }
 
-/** Only managers may Send Notification (role normalized in findUserById). */
+/* Only managers may Send Notification. Accepts a plain object or a User instance. */
 function canUserSendNotifications(user) {
-  const r = user && user.role != null ? String(user.role).trim().toLowerCase() : '';
-  return r === ROLE_MANAGER;
+  if (!user) return false;
+  const raw = typeof user.normalizedRole === 'string'
+    ? user.normalizedRole
+    : (user.role != null ? String(user.role).trim().toLowerCase() : '');
+  return raw === ROLE_MANAGER;
 }
 
 // Dummy hash used when no user is found at login, so timing doesn't
@@ -87,31 +90,50 @@ async function signup(body) {
   }
 
   // If username already exists/in use, non-specific error message
-  if (await db.findUserByUsername(username)) {
+  if (await User.findOne({ where: { username }, attributes: ['id'] })) {
     throw new AuthError('Could not create your account.');
   }
-  //If email already exists/in use, non-specific error message
-  if (await db.findUserByEmail(email)) {
+  // If email already exists/in use, non-specific error message
+  if (await User.findOne({ where: { email }, attributes: ['id'] })) {
     throw new AuthError('Could not create your account.');
   }
 
   const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
-  const role = signupRoleToDbRole(signupRole);
-  let userId;
+  const dbRole = signupRoleToDbRole(signupRole);
+
+  // Wrapped in a transaction so an unexpected role substitution by an
+  // AFTER INSERT trigger or column default does not leave a bad row
   try {
-    userId = await db.createUser({
-      username,
-      first_name,
-      last_name,
-      email,
-      password_hash,
-      role
+    return await sequelize.transaction(async (t) => {
+      const created = await User.create(
+        { username, first_name, last_name, email, password_hash, role: dbRole },
+        { transaction: t }
+      );
+
+      // Re-read the row inside the same transaction to catch trigger interference.
+      const check = await User.findByPk(created.id, {
+        attributes: ['role'],
+        transaction: t
+      });
+      const saved = check && check.role != null
+        ? String(check.role).trim().toLowerCase()
+        : '';
+      if (saved !== dbRole) {
+        throw new Error(
+          `Database stored role "${check ? check.role : null}" instead of "${dbRole}". ` +
+          'Remove or fix triggers/defaults on users.role, or widen CHECK constraints.'
+        );
+      }
+      return { userId: created.id, first_name };
     });
   } catch (err) {
+    // Sequelize wraps unique-constraint violations as SequelizeUniqueConstraintError;
+    // display them as the same vague message used above.
+    if (err && err.name === 'SequelizeUniqueConstraintError') {
+      throw new AuthError('Could not create your account.');
+    }
     throw new AuthError(err.message || 'Could not create your account.');
   }
-
-  return { userId, first_name };
 }
 
 async function login(body) {
@@ -122,7 +144,14 @@ async function login(body) {
     throw new AuthError('Both fields are required.');
   }
 
-  const user = await db.findCredentialsByIdentifier(identifier);
+  // Single lookup against either the username or email column. Both columns
+  // are stored lowercased at signup, and identifier is lowercased above,
+  // so a direct comparison is fine
+  const user = await User.findOne({
+    where: { [Op.or]: [{ username: identifier }, { email: identifier }] },
+    attributes: ['id', 'password_hash']
+  });
+
   const ok = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
 
   if (!user || !ok) {
@@ -133,22 +162,32 @@ async function login(body) {
 }
 
 async function getCurrentUser(userId) {
-  return db.findUserById(userId);
+  const user = await User.findByPk(userId);
+  return user ? user.toPublic() : null;
 }
 
 /*
- * Orchestration. loads recipients from the DB
- * Sends email (BCC) to every user whose role is listed in
- * config.app.notificationRoles, then records the send in SQL Server.
+ * Loads recipients from the DB, sends one BCC email to every
+ * user whose role is listed in config.app.notificationRoles, then records
+ * the send (notification + junction rows) inside one transaction.
  */
 async function sendBroadcastNotification({ subject, body, senderName, senderEmail }) {
   const roleNames = config.app.notificationRoles;
-  const recipients = await db.getUserEmailsByRoles(roleNames);
+
+  const recipients = await User.findAll({
+    where: {
+      role: { [Op.in]: roleNames },
+      email: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
+    },
+    attributes: ['id', 'email']
+  });
+
   if (!recipients.length) {
     throw new AuthError(
-        'No recipients found. Add users with a matching role (see NOTIFICATION_ROLES in .env).'
+      'No recipients found. Add users with a matching role (see NOTIFICATION_ROLES in .env).'
     );
   }
+
   const bccAddresses = recipients.map((r) => r.email);
   await sendNotificationEmail({
     subject,
@@ -157,11 +196,22 @@ async function sendBroadcastNotification({ subject, body, senderName, senderEmai
     senderEmail,
     bccAddresses
   });
-  await db.saveNotificationWithRecipients({
-    senderEmail,
-    subject,
-    body,
-    recipientUserIds: recipients.map((r) => r.id)
+
+  await sequelize.transaction(async (t) => {
+    const notification = await Notification.create(
+      {
+        sender_email: String(senderEmail).slice(0, 100),
+        subject: String(subject).slice(0, 150),
+        body,
+        recipient_count: recipients.length
+      },
+      { transaction: t }
+    );
+
+    await NotificationRecipient.bulkCreate(
+      recipients.map((r) => ({ notification_id: notification.id, user_id: r.id })),
+      { transaction: t }
+    );
   });
 }
 
