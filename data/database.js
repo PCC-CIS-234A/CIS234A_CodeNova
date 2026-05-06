@@ -167,35 +167,6 @@ async function createUser({ username, first_name, last_name, email, password_has
   }
 }
 
-/**
- * DEV ONLY — find or create a placeholder test user for the given role.
- * Used by the developer bypass button on /login so we can preview the
- * post-login screens without typing credentials. The password_hash stored
- * here will never match a real password (random junk), so the account
- * cannot be logged into through the normal /login form.
- */
-async function findOrCreateDevUser(role) {
-  const dbRole = String(role || 'subscriber').trim().toLowerCase();
-  const username = `dev_${dbRole}`;
-  const email = `${username}@dev.local`;
-  const first_name = 'Dev';
-  const last_name = dbRole.charAt(0).toUpperCase() + dbRole.slice(1);
-
-  const existing = await findUserByUsername(username);
-  if (existing) return existing.id;
-
-  // Use a non-functional placeholder; bcrypt.compare will never match.
-  const password_hash = '$2b$12$devbypassNEVERmatchesANYrealPASSWORDxxxxxxxxxxxxxxxxxxxx';
-  return createUser({
-    username,
-    first_name,
-    last_name,
-    email,
-    password_hash,
-    role: dbRole
-  });
-}
-
 // ---------------------------------------------------------------------------
 // Notifications — sends emails to recipients + audit trail
 // ---------------------------------------------------------------------------
@@ -271,7 +242,6 @@ module.exports = {
   findUserByEmail,
   findCredentialsByIdentifier,
   createUser,
-  findOrCreateDevUser,
   getUserEmailsByRoles,
   saveNotificationWithRecipients
 };

@@ -113,25 +113,6 @@ app.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
 
-// DEV ONLY — bypass login and sign in as a placeholder user with the
-// chosen role so we can preview role-specific screens. Triggered by the
-// dev panel on /login.
-app.post('/dev/bypass', async (req, res, next) => {
-  try {
-    const role = (req.body.role || '').trim().toLowerCase();
-    const { userId } = await logic.devBypassLogin(role);
-    req.session.userId = userId;
-    req.flash('success', `Dev bypass: signed in as ${role}.`);
-    res.redirect('/');
-  } catch (error) {
-    if (error instanceof AuthError) {
-      req.flash('error', error.message);
-      return res.redirect('/login');
-    }
-    next(error);
-  }
-});
-
 // 404
 app.use((req, res) => {
   res.status(404).render('404', { title: 'Page Not Found' });

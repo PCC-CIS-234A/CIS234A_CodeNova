@@ -136,21 +136,6 @@ async function getCurrentUser(userId) {
   return db.findUserById(userId);
 }
 
-/**
- * DEV ONLY — log in as a placeholder user with the requested role so we
- * can preview role-specific screens without entering credentials.
- * Accepts the DB role values: manager, staff, subscriber/student. TEMPORARY. - Noah
- */
-const DEV_BYPASS_ROLES = [ROLE_MANAGER, ROLE_STAFF, ROLE_SUBSCRIBER];
-async function devBypassLogin(role) {
-  const r = String(role || '').trim().toLowerCase();
-  if (!DEV_BYPASS_ROLES.includes(r)) {
-    throw new AuthError('Invalid dev bypass role.');
-  }
-  const userId = await db.findOrCreateDevUser(r);
-  return { userId };
-}
-
 /*
  * Orchestration. loads recipients from the DB
  * Sends email (BCC) to every user whose role is listed in
@@ -184,7 +169,6 @@ module.exports = {
   AuthError,
   signup,
   login,
-  devBypassLogin,
   getCurrentUser,
   sendBroadcastNotification,
   canUserSendNotifications,
