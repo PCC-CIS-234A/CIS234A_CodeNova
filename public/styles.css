@@ -206,3 +206,40 @@ h1 {
     text-decoration: none;
     font-weight: bold;
 }
+
+.notification-card {
+    cursor: pointer;
+    border: 1px solid #ccc;
+    padding: 16px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+}
+
+.notification-details {
+    display: none;
+    margin-top: 12px;
+    padding: 12px;
+    background-color: #f5f5f5;
+    border-radius: 6px;
+}
+
+.notification-clickable-row {
+    cursor: pointer;
+}
+
+.notification-clickable-row:hover {
+    background-color: #f5f5f5;
+}
+
+.popup-box {
+    padding: 16px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    margin-top: 8px;
+    transition: all 0.2s ease-in-out;
+}
+
+.notification-clickable-row.active {
+    background-color: #eef6f8;
+}
