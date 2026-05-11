@@ -17,6 +17,9 @@ const { sendNotificationEmail } = require('./mail');
 
 const SALT_ROUNDS = 12;
 const USERNAME_RE = /^[A-Za-z0-9._-]{3,30}$/;
+const UPPERCASE_RE = /[A-Z]/;
+const DIGIT_RE = /[0-9]/;
+const SPECIAL_CHAR_RE = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~`]/;
 
 /* Values stored in users.role (SQL Server). */
 const ROLE_MANAGER = 'manager';
@@ -84,6 +87,15 @@ async function signup(body) {
   }
   if (password.length < 8) {
     throw new AuthError('Password must be at least 8 characters.');
+  }
+  if (!UPPERCASE_RE.test(password)) {
+    throw new AuthError('Password must contain at least one uppercase letter.');
+  }
+  if (!DIGIT_RE.test(password)) {
+    throw new AuthError('Password must contain at least one number.');
+  }
+  if (!SPECIAL_CHAR_RE.test(password)) {
+    throw new AuthError('Password must contain at least one special character (e.g. ! @ # $ % & *).');
   }
   if (password !== confirm_password) {
     throw new AuthError('The two passwords do not match.');
