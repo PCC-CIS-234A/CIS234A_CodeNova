@@ -1,6 +1,7 @@
-const { sql, getConnection } = require("./db");
+const { getConnection } = require("./db");
 
-// Reads all notifications from the database.
+// Reads all notifications from the database for the notification log.
+// This keeps SQL/database code in the data layer instead of the route file.
 async function getAllNotifications() {
     const pool = await getConnection();
 
@@ -20,25 +21,6 @@ async function getAllNotifications() {
     return result.recordset;
 }
 
-// Writes a new notification to the database.
-async function createNotification(notification) {
-    const pool = await getConnection();
-
-    await pool.request()
-        .input("sender_email", sql.VarChar, notification.senderEmail)
-        .input("subject", sql.VarChar, notification.subject)
-        .input("body", sql.VarChar, notification.body)
-        .input("recipient_count", sql.Int, notification.recipientCount)
-        .input("date", sql.Date, notification.date)
-        .query(`
-            INSERT INTO Notifications 
-                (sender_email, subject, body, recipient_count, date)
-            VALUES 
-                (@sender_email, @subject, @body, @recipient_count, @date)
-        `);
-}
-
 module.exports = {
-    getAllNotifications,
-    createNotification
+    getAllNotifications
 };

@@ -22,15 +22,4 @@ router.get("/log", async (req, res) => {
     }
 });
 
-// Saves a new notification to the database.
-router.post("/create", async (req, res) => {
-    try {
-        await notificationService.createNotification(req.body);
-        res.redirect("/notifications/log");
-    } catch (error) {
-        console.error("Error creating notification:", error);
-        res.status(500).send("Could not create notification.");
-    }
-});
-
 module.exports = router;

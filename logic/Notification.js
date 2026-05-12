@@ -1,4 +1,4 @@
-// This class represents one notification in the system.
+// This class represents notification in the system.
 class Notification {
     constructor(senderEmail, subject, body, recipientCount, date) {
         this.senderEmail = senderEmail;
