@@ -56,25 +56,29 @@
 
             <tbody>
             <% notifications.forEach((n, index) => { %>
-                <tr class="notification-clickable-row" data-index="<%= index %>">
+                <tr
+                        class="notification-clickable-row"
+                        data-subject="<%= n.subject %>"
+                        data-body="<%= n.body %>"
+                        data-sender="<%= n.sender_email %>"
+                        data-date="<%= n.sent_at_display %>"
+                        data-recipients="<%= n.recipient_count %>"
+                >
                     <td class="log-date"><%= n.sent_at_display %></td>
                     <td><%= n.sender_email %></td>
                     <td><%= n.subject %></td>
 
                     <td class="log-body">
-                        <!-- Preview -->
-                        <span id="message-preview-<%= index %>">
+            <span id="message-preview-<%= index %>">
                 <%= n.body.length > 60 ? n.body.substring(0, 60) + '...' : n.body %>
             </span>
 
-                        <!-- Expanded inline -->
                         <span id="message-full-<%= index %>" style="display: none;">
                 <%= n.body %>
             </span>
 
                         <% if (n.body.length > 60) { %>
                             <div class="form-secondary-actions">
-                                <!-- Expand button -->
                                 <button
                                         type="button"
                                         class="btn btn-compact btn-secondary expand-btn"
@@ -83,11 +87,9 @@
                                     Expand
                                 </button>
 
-                                <!-- Popup button -->
                                 <button
                                         type="button"
                                         class="btn btn-compact btn-secondary popup-btn"
-                                        data-index="<%= index %>"
                                 >
                                     View Details
                                 </button>
@@ -97,25 +99,14 @@
 
                     <td class="log-recipients"><%= n.recipient_count %></td>
                 </tr>
-
-                <!-- Popup row -->
-                <tr id="popup-row-<%= index %>" style="display: none;">
-                    <td colspan="5">
-                        <div class="popup-box">
-                            <h3><%= n.subject %></h3>
-
-                            <p><strong>Date Sent:</strong> <%= n.sent_at_display %></p>
-                            <p><strong>Sent By:</strong> <%= n.sender_email %></p>
-                            <p><strong>Recipients:</strong> <%= n.recipient_count %></p>
-
-                            <p><strong>Full Message:</strong></p>
-                            <p><%= n.body %></p>
-                        </div>
-                    </td>
-                </tr>
             <% }) %>
             </tbody>
         </table>
+        <div id="notification-details" class="details-box">
+            <h2>Notification Details</h2>
+
+            <div id="details-content"></div>
+        </div>
     <% } %>
 </div>
 

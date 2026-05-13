@@ -1,10 +1,10 @@
 // Wait until the page fully loads before attaching events.
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Expand / Collapse
+    // Expand / Collapse message preview in the table
     document.querySelectorAll(".expand-btn").forEach(button => {
         button.addEventListener("click", function (event) {
-            event.stopPropagation(); // Prevent row click
+            event.stopPropagation();
 
             const index = this.getAttribute("data-index");
             const preview = document.getElementById(`message-preview-${index}`);
@@ -22,34 +22,58 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Popup button (View Details)
+    // Function that fills the bottom details box
+    function showNotificationDetails(row) {
+        const detailsContent = document.getElementById("details-content");
+
+        detailsContent.innerHTML = `
+            <p><strong>Subject:</strong> ${row.dataset.subject}</p>
+            <p><strong>Message:</strong> ${row.dataset.body}</p>
+            <p><strong>Sent By:</strong> ${row.dataset.sender}</p>
+            <p><strong>Date Sent:</strong> ${row.dataset.date}</p>
+            <p><strong>Recipients:</strong> ${row.dataset.recipients}</p>
+        `;
+    }
+
+    // View Details button updates the bottom details box
     document.querySelectorAll(".popup-btn").forEach(button => {
         button.addEventListener("click", function (event) {
-            event.stopPropagation(); // Prevent row click
+            event.stopPropagation();
 
-            const index = this.getAttribute("data-index");
-            const popupRow = document.getElementById(`popup-row-${index}`);
-
-            if (popupRow.style.display === "none") {
-                popupRow.style.display = "table-row";
-                this.textContent = "Hide Details";
-            } else {
-                popupRow.style.display = "none";
-                this.textContent = "View Details";
-            }
+            const row = this.closest(".notification-clickable-row");
+            showNotificationDetails(row);
         });
     });
 
-    // Clicking the entire row opens/closes
+    // Clicking the row toggles the bottom details box
     document.querySelectorAll(".notification-clickable-row").forEach(row => {
         row.addEventListener("click", function () {
-            const index = this.getAttribute("data-index");
-            const popupRow = document.getElementById(`popup-row-${index}`);
 
-            popupRow.style.display =
-                popupRow.style.display === "none" ? "table-row" : "none";
+            const detailsContent = document.getElementById("details-content");
+            const detailsBox = document.getElementById("notification-details");
 
-            this.classList.toggle("active");
+            // If already active, close it
+            if (this.classList.contains("active")) {
+
+                this.classList.remove("active");
+
+                detailsContent.innerHTML = `
+                <p>Select a notification to view details.</p>
+            `;
+
+                return;
+            }
+
+            // Remove active from all rows
+            document.querySelectorAll(".notification-clickable-row").forEach(r => {
+                r.classList.remove("active");
+            });
+
+            // Activate the clicked row
+            this.classList.add("active");
+
+            // Show details
+            showNotificationDetails(this);
         });
     });
 
