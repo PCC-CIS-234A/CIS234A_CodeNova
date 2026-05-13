@@ -74,10 +74,11 @@ app.post('/signup', async (req, res, next) => {
     email: (req.body.email || '').trim().toLowerCase()
   };
   try {
-    const { userId, first_name } = await logic.signup(req.body);
-    req.session.userId = userId;
-    req.flash('success', `Welcome, ${first_name}!`);
-    res.redirect('/');
+    const { first_name } = await logic.signup(req.body);
+    // Does NOT auto-login anymore. Sends them to a confirmation page so they
+    // can explicitly log in with their credentials.
+    req.flash('success', `Account created successfully${first_name ? ', ' + first_name : ''}!`);
+    res.redirect('/signup/success');
   } catch (error) {
     if (error instanceof AuthError) {
       req.flash('error', error.message);
@@ -85,6 +86,11 @@ app.post('/signup', async (req, res, next) => {
     }
     next(error);
   }
+});
+
+app.get('/signup/success', (req, res) => {
+  if (req.currentUser) return res.redirect('/');
+  res.render('signup-success', { title: 'Account Created' });
 });
 
 // login

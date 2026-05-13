@@ -17,6 +17,12 @@ const { sendNotificationEmail } = require('./mail');
 
 const SALT_ROUNDS = 12;
 const USERNAME_RE = /^[A-Za-z0-9._-]{3,30}$/;
+/*
+  Email format check: one name part, one "@", one domain with at least
+  one dot, no whitespace anywhere.
+*/
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_MAX_LENGTH = 100; // matches users.email column width
 const UPPERCASE_RE = /[A-Z]/;
 const DIGIT_RE = /[0-9]/;
 const SPECIAL_CHAR_RE = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~`]/;
@@ -84,6 +90,12 @@ async function signup(body) {
   }
   if (!USERNAME_RE.test(username)) {
     throw new AuthError('Username must be 3-30 characters: letters, numbers, dots, underscores, or hyphens.');
+  }
+  if (!EMAIL_RE.test(email)) {
+    throw new AuthError('Enter a valid email address (e.g. name@example.com).');
+  }
+  if (email.length > EMAIL_MAX_LENGTH) {
+    throw new AuthError(`Email address is too long (max ${EMAIL_MAX_LENGTH} characters).`);
   }
   if (password.length < 8) {
     throw new AuthError('Password must be at least 8 characters.');

@@ -3,7 +3,7 @@
   data/database.js  --  Data layer (bottom tier)
 
   Sequelize ORM. SQL Server access lives here as model classes
-  rather than hand-written queries. Each table is mapped to a model:
+  rather than simple queries. Each table is mapped to a model:
 
     User                  -> users
     Notification          -> notifications
