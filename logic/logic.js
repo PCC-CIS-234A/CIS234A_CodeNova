@@ -179,7 +179,7 @@ async function login(body) {
   const ok = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
 
   if (!user || !ok) {
-    throw new AuthError('Invalid username/email or password.');
+    throw new AuthError('Invalid credentials.');
   }
 
   return { userId: user.id };
