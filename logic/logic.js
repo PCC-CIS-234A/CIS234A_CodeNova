@@ -1,42 +1,41 @@
 /*
   Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis
-  logic/logic.js  -  Logic Layer
+  logic/logic.js  -  Logic Layer (middle tier)
 
-  Business rules for signup and login: input validation, password
-  hashing, and the workflow that ties them together. Talks to the
-  data layer via Sequelize models.
+  Business rules for signup and login: builds User domain objects from
+  request input, runs them through validate(), then persists via the
+  Sequelize UserModel.
 
-  User-facing problems are thrown as `AuthError`; the application
-  layer turns those into flash messages.
+  User-facing problems get thrown as AuthError; the application layer
+  catches those and renders them as flash messages. Anything else
+  propagates up to the Express error handler.
 */
 
 const bcrypt = require('bcryptjs');
 const config = require('../config');
-const { sequelize, Op, User, Notification, NotificationRecipient } = require('../data/database');
-const { sendNotificationEmail } = require('./mail');
+const { sequelize, Op, UserModel, Notification, NotificationRecipient } = require('../data/database');
+const User = require('../models/User');
 
+
+/** Encryption factor for bcrypt. Higher = slower = harder to brute-force. 12
+ *  is roughly 250ms on a modern laptop -- slow enough for security,
+ *  fast enough that login still feels snappy. */
 const SALT_ROUNDS = 12;
-const USERNAME_RE = /^[A-Za-z0-9._-]{3,30}$/;
-/*
-  Email format check: one name part, one "@", one domain with at least
-  one dot, no whitespace anywhere.
-*/
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const EMAIL_MAX_LENGTH = 100; // matches users.email column width
-const UPPERCASE_RE = /[A-Z]/;
-const DIGIT_RE = /[0-9]/;
-const SPECIAL_CHAR_RE = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>/?~`]/;
 
-/* Values stored in users.role (SQL Server). */
+/** Role strings as they appear in users.role. */
 const ROLE_MANAGER = 'manager';
 const ROLE_STAFF = 'staff';
 const ROLE_SUBSCRIBER = 'subscriber';
 
-/* Form values from signup. */
+/** What the signup form's account-type will actually send us. */
 const SIGNUP_ROLES = ['student', 'manager', 'staff'];
 
-/*
- * Reads role from POST body (handles missing key, alternate names, or array duplicates).
+/**
+ * Read the chosen account type off a POST body, and we tolerate the value
+ * arriving as an array in case some duplicate input ever sneaks in.
+ *
+ * @param {object} body  Express req.body.
+ * @returns {string}     A lowercase signup-role string, or 'student' if nothing usable was sent.
  */
 function pickSignupRoleFromBody(body) {
   if (!body) return 'student';
@@ -46,6 +45,15 @@ function pickSignupRoleFromBody(body) {
   return String(v).trim().toLowerCase();
 }
 
+/**
+ * Translate the form's vocabulary (student/manager/staff) into the
+ * vocabulary the database actually uses in users.role
+ * (subscriber/manager/staff). "Student" maps to "subscriber" because
+ * students are our default audience for broadcast emails.
+ *
+ * @param {string} signupRole
+ * @returns {string} The corresponding DB role.
+ */
 function signupRoleToDbRole(signupRole) {
   if (signupRole === 'student') return ROLE_SUBSCRIBER;
   if (signupRole === 'manager') return ROLE_MANAGER;
@@ -53,7 +61,12 @@ function signupRoleToDbRole(signupRole) {
   return ROLE_SUBSCRIBER;
 }
 
-/* Only managers may Send Notification. Accepts a plain object or a User instance. */
+/**
+ * Manages who can send broadcast notifications.
+ *
+ * @param {{normalizedRole?:string, role?:string}|null|undefined} user
+ * @returns {boolean}
+ */
 function canUserSendNotifications(user) {
   if (!user) return false;
   const raw = typeof user.normalizedRole === 'string'
@@ -62,10 +75,20 @@ function canUserSendNotifications(user) {
   return raw === ROLE_MANAGER;
 }
 
-// Dummy hash used when no user is found at login, so timing doesn't
-// reveal whether the username/email exists.
+/**
+ * A real bcrypt hash that nothing matches. We compare against this
+ * when login can't find the user, so the response takes about the
+ * same time as a successful lookup and an attacker can't tell from
+ * timing alone whether the account exists.
+ */
 const DUMMY_HASH = '$2b$12$0123456789012345678901abcdefabcdefabcdefabcdefabcdefab';
 
+/**
+ * Thrown for problems the user can actually fix (bad password,
+ * duplicate username, etc.). The application layer catches these and
+ * shows the message as a flash. Anything else gets treated as a real
+ * bug and bubbles up to Express's error handler.
+ */
 class AuthError extends Error {
   constructor(message) {
     super(message);
@@ -73,86 +96,81 @@ class AuthError extends Error {
   }
 }
 
+/**
+ * Create a new user account. We build a User instance from the form,
+ * run its structural validators, hash the password, and then insert
+ * the row inside a transaction with the database. After the insert
+ * we check the row to make sure no AFTER INSERT trigger or column
+ * default rewrote the role behind our back -- better to fail loudly
+ * than to silently store the wrong role.
+ *
+ * Throws AuthError on user-fixable problems (validation issues,
+ * duplicate username/email). Other errors issue normally.
+ *
+ * @param {object} body  The Express req.body from POST /signup.
+ * @returns {Promise<{userId:number, first_name:string}>}
+ */
 async function signup(body) {
-  const username = (body.username || '').trim().toLowerCase();
-  const first_name = (body.first_name || '').trim();
-  const last_name = (body.last_name || '').trim();
-  const email = (body.email || '').trim().toLowerCase();
-  const password = body.password || '';
-  const confirm_password = body.confirm_password || '';
+  // Form-vocabulary check happens here because the User class only
+  // knows about DB roles. Catching a bogus form value before we map
+  // it lets us give an appropriate error message.
   const signupRole = pickSignupRoleFromBody(body);
-
-  if (!username || !first_name || !last_name || !email || !password) {
-    throw new AuthError('All fields are required.');
-  }
   if (!SIGNUP_ROLES.includes(signupRole)) {
     throw new AuthError('Choose a valid account type: Student, Manager, or Staff.');
   }
-  if (!USERNAME_RE.test(username)) {
-    throw new AuthError('Username must be 3-30 characters: letters, numbers, dots, underscores, or hyphens.');
-  }
-  if (!EMAIL_RE.test(email)) {
-    throw new AuthError('Enter a valid email address (e.g. name@example.com).');
-  }
-  if (email.length > EMAIL_MAX_LENGTH) {
-    throw new AuthError(`Email address is too long (max ${EMAIL_MAX_LENGTH} characters).`);
-  }
-  if (password.length < 8) {
-    throw new AuthError('Password must be at least 8 characters.');
-  }
-  if (!UPPERCASE_RE.test(password)) {
-    throw new AuthError('Password must contain at least one uppercase letter.');
-  }
-  if (!DIGIT_RE.test(password)) {
-    throw new AuthError('Password must contain at least one number.');
-  }
-  if (!SPECIAL_CHAR_RE.test(password)) {
-    throw new AuthError('Password must contain at least one special character (e.g. ! @ # $ % & *).');
-  }
-  if (password !== confirm_password) {
-    throw new AuthError('The two passwords do not match.');
-  }
 
-  // If username already exists/in use, non-specific error message
-  if (await User.findOne({ where: { username }, attributes: ['id'] })) {
+  // Build the domain User from the form. The constructor normalizes
+  // (trim + lowercase where appropriate); we hand off to validate()
+  // for the structural rules.
+  const user = User.fromSignupForm(body, signupRoleToDbRole(signupRole));
+
+  const fieldError = user.validate();
+  if (fieldError) throw new AuthError(fieldError);
+
+  const passwordError = User.validatePassword(body.password || '', body.confirm_password || '');
+  if (passwordError) throw new AuthError(passwordError);
+
+  // Uniqueness checks need the database, so they stay here rather
+  // than on User. Vague error message either way so attackers can't
+  // probe for valid usernames or emails.
+  if (await UserModel.findOne({ where: { username: user.username }, attributes: ['id'] })) {
     throw new AuthError('Could not create your account.');
   }
-  // If email already exists/in use, non-specific error message
-  if (await User.findOne({ where: { email }, attributes: ['id'] })) {
+  if (await UserModel.findOne({ where: { email: user.email }, attributes: ['id'] })) {
     throw new AuthError('Could not create your account.');
   }
 
-  const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
-  const dbRole = signupRoleToDbRole(signupRole);
+  // All checks pass -- > lock in the password.
+  user.password_hash = await bcrypt.hash(body.password, SALT_ROUNDS);
 
-  // Wrapped in a transaction so an unexpected role substitution by an
-  // AFTER INSERT trigger or column default does not leave a bad row
+  // Wrapped in a transaction so an unexpected role substitution by
+  // a trigger or default doesn't leave a bad row hanging around.
   try {
     return await sequelize.transaction(async (t) => {
-      const created = await User.create(
-        { username, first_name, last_name, email, password_hash, role: dbRole },
-        { transaction: t }
-      );
+      const created = await UserModel.create(user.toPersistence(), { transaction: t });
+      user.id = created.id;
 
-      // Re-read the row inside the same transaction to catch trigger interference.
-      const check = await User.findByPk(created.id, {
+      // Re-read the row inside the same transaction. If a trigger
+      // overwrote our role, bail out so the rollback fires.
+      const check = await UserModel.findByPk(user.id, {
         attributes: ['role'],
         transaction: t
       });
       const saved = check && check.role != null
         ? String(check.role).trim().toLowerCase()
         : '';
-      if (saved !== dbRole) {
+      if (saved !== user.role) {
         throw new Error(
-          `Database stored role "${check ? check.role : null}" instead of "${dbRole}". ` +
+          `Database stored role "${check ? check.role : null}" instead of "${user.role}". ` +
           'Remove or fix triggers/defaults on users.role, or widen CHECK constraints.'
         );
       }
-      return { userId: created.id, first_name };
+      return { userId: user.id, first_name: user.first_name };
     });
   } catch (err) {
-    // Sequelize wraps unique-constraint violations as SequelizeUniqueConstraintError;
-    // display them as the same vague message used above.
+    // Sequelize wraps unique-constraint violations as
+    // SequelizeUniqueConstraintError; surface them as the same vague
+    // message we used above so callers can't tell which field collided.
     if (err && err.name === 'SequelizeUniqueConstraintError') {
       throw new AuthError('Could not create your account.');
     }
@@ -160,6 +178,16 @@ async function signup(body) {
   }
 }
 
+/**
+ * Look up the user by either their username or their email and check
+ * the typed password against the stored bcrypt hash. If we can't find
+ * them, we still run bcrypt against a dummy hash so the response time
+ * is roughly the same -- an attacker can't probe for valid accounts
+ * by timing the response.
+ *
+ * @param {object} body  The Express req.body from POST /login.
+ * @returns {Promise<{userId:number}>}
+ */
 async function login(body) {
   const identifier = (body.identifier || '').trim().toLowerCase();
   const password = body.password || '';
@@ -168,75 +196,57 @@ async function login(body) {
     throw new AuthError('Both fields are required.');
   }
 
-  // Single lookup against either the username or email column. Both columns
-  // are stored lowercased at signup, and identifier is lowercased above,
-  // so a direct comparison is fine
-  const user = await User.findOne({
+  // Single lookup against either column. Both were stored lowercased
+  // at signup and we lowercased the identifier above, so a direct
+  // equality compare is fine.
+  const row = await UserModel.findOne({
     where: { [Op.or]: [{ username: identifier }, { email: identifier }] },
     attributes: ['id', 'password_hash']
   });
 
-  const ok = await bcrypt.compare(password, user ? user.password_hash : DUMMY_HASH);
+  const ok = await bcrypt.compare(password, row ? row.password_hash : DUMMY_HASH);
 
-  if (!user || !ok) {
+  if (!row || !ok) {
     throw new AuthError('Invalid credentials.');
   }
 
-  return { userId: user.id };
+  return { userId: row.id };
 }
 
-async function getCurrentUser(userId) {
-  const user = await User.findByPk(userId);
-  return user ? user.toPublic() : null;
-}
-
-/*
- * Loads recipients from the DB, sends one BCC email to every
- * user whose role is listed in config.app.notificationRoles, then records
- * the send (notification + junction rows) inside one transaction.
+/**
+ * Load a user by id and return the safe, display-ready shape. Strips
+ * password_hash and anything else we don't want to leak into views or
+ * session data. Used by the user-loader middleware to attach
+ * `currentUser` to every response.
+ *
+ * @param {number} userId
+ * @returns {Promise<object|null>} The output of User#toPublic(), or null if no such user.
  */
-async function sendBroadcastNotification({ subject, body, senderName, senderEmail }) {
-  const roleNames = config.app.notificationRoles;
+async function getCurrentUser(userId) {
+  const row = await UserModel.findByPk(userId);
+  if (!row) return null;
+  return new User(row.toJSON()).toPublic();
+}
 
-  const recipients = await User.findAll({
-    where: {
-      role: { [Op.in]: roleNames },
-      email: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
-    },
-    attributes: ['id', 'email']
-  });
-
-  if (!recipients.length) {
-    throw new AuthError(
-      'No recipients found. Add users with a matching role (see NOTIFICATION_ROLES in .env).'
-    );
-  }
-
-  const bccAddresses = recipients.map((r) => r.email);
-  await sendNotificationEmail({
-    subject,
-    body,
-    senderName,
-    senderEmail,
-    bccAddresses
-  });
-
-  await sequelize.transaction(async (t) => {
-    const notification = await Notification.create(
-      {
-        sender_email: String(senderEmail).slice(0, 100),
-        subject: String(subject).slice(0, 150),
-        body,
-        recipient_count: recipients.length
-      },
-      { transaction: t }
-    );
-
-    await NotificationRecipient.bulkCreate(
-      recipients.map((r) => ({ notification_id: notification.id, user_id: r.id })),
-      { transaction: t }
-    );
-  });
+/**
+ * Send one broadcast notification to every user whose role appears in
+ * config.app.notificationRoles.
+ *
+ * Currently a stub: the email transport (logic/mail.js) has been
+ * removed. Calling this will throw so we don't silently "send"
+ * notifications.
+ *
+ * @param {object} _opts     { subject, body, senderName, senderEmail }.
+ * @returns {Promise<void>}
+ * @throws {Error}           Always, until the email layer is reimplemented.
+ */
+async function sendBroadcastNotification(_opts) {
+  // Reference these so eslint and the linter see them as "used" -- they
+  // come back into play the moment the email layer is wired up again.
+  void config; void UserModel; void Notification; void NotificationRecipient; void Op; void sequelize;
+  throw new Error(
+    'Email layer (logic/mail.js) has been removed. Reimplement before calling sendBroadcastNotification.'
+  );
 }
 
 module.exports = {

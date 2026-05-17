@@ -6,9 +6,6 @@
   <% if (currentUser) { %>
     <h1>Welcome, <%= currentUser.first_name %>!</h1>
     <p>You are logged in.</p>
-    <% if (currentUser.role) { %>
-      <p>Role: <span class="role-badge"><%= currentUser.role %></span></p>
-    <% } %>
   <% } else { %>
     <h1>Welcome!</h1>
     <p>Please log in or create an account to continue.</p>

@@ -2,23 +2,32 @@
   Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis
   data/database.js  --  Data layer (bottom tier)
 
-  Sequelize ORM. SQL Server access lives here as model classes
-  rather than simple queries. Each table is mapped to a model:
+  Sequelize ORM. SQL Server access lives here as model classes rather
+  than scattered raw queries. Each table maps to one model:
 
-    User                  -> users
-    Notification          -> notifications
-    NotificationRecipient -> notification_recipient (junction)
+    UserModel              -> users
+    Notification           -> notifications
+    NotificationRecipient  -> notification_recipient (junction)
 
-  The logic layer imports the models and the sequelize instance
-  (for transactions). All parameter binding is done by Sequelize
-  so SQL injection protection is preserved.
+  The logic layer imports these models (plus the sequelize instance,
+  for transactions) and does its work through them. All parameter
+  binding goes through Sequelize, so SQL injection protection
+  functions automatically.
+
+  The plain JS "User" domain class lives in models/User.js. This
+  file's UserModel is specifically the Sequelize-backed table row.
 */
 
 const { Sequelize, DataTypes, Model, Op } = require('sequelize');
 const config = require('../config');
 
-// Sequelize instance (one per process)
+// -- Sequelize instance (one per process) ---------------------------------
 
+/**
+ * Fail fast at startup if the .env file doesn't have the DB pieces we
+ * need. Without these the connection will hang or error in a much less
+ * helpful way later on.
+ */
 function assertDbConfigured() {
   const { server, database } = config.db;
   if (!server || !database) {
@@ -45,36 +54,25 @@ const sequelize = new Sequelize(
     pool: { max: 10, min: 0, idle: 30000 },
     logging: false,
     define: {
-      // Tables already exist on the server; do not let Sequelize add
-      // createdAt / updatedAt or pluralize names.
+      // The tables already exist on the server; don't let Sequelize
+      // add createdAt / updatedAt or pluralize names behind our back.
       timestamps: false,
       freezeTableName: true
     }
   }
 );
 
-// Models
+// -- Models ---------------------------------------------------------------
 
-class User extends Model {
-  /* Lowercased role for consistent role checks in the logic layer. */
-  get normalizedRole() {
-    return this.role != null ? String(this.role).trim().toLowerCase() : '';
-  }
+/**
+ * Sequelize-backed row from the users table. This class is the data
+ * layer's view of a user -- it knows about the columns and how to read
+ * and write them. For domain logic (validation, shaping for views, etc.)
+ * use the plain User class in models/User.js instead.
+ */
+class UserModel extends Model {}
 
-  /* Public profile fields (matches the old PUBLIC_FIELDS list). */
-  toPublic() {
-    return {
-      id: this.id,
-      username: this.username,
-      first_name: this.first_name,
-      last_name: this.last_name,
-      email: this.email,
-      role: this.normalizedRole
-    };
-  }
-}
-
-User.init(
+UserModel.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     username: { type: DataTypes.STRING(50), allowNull: false, unique: true },
@@ -87,6 +85,11 @@ User.init(
   { sequelize, modelName: 'User', tableName: 'users' }
 );
 
+/**
+ * One outgoing notification: who sent it, what they said, and how many
+ * people received a copy. The actual list of recipients lives in the
+ * NotificationRecipient junction so we can answer "who got this?" later.
+ */
 class Notification extends Model {}
 
 Notification.init(
@@ -100,6 +103,11 @@ Notification.init(
   { sequelize, modelName: 'Notification', tableName: 'notifications' }
 );
 
+/**
+ * Junction table connecting users and notifications. A composite primary
+ * key of (notification_id, user_id) means a given user can appear at
+ * most once per notification, which is exactly what we want.
+ */
 class NotificationRecipient extends Model {}
 
 NotificationRecipient.init(
@@ -120,24 +128,33 @@ NotificationRecipient.init(
   { sequelize, modelName: 'NotificationRecipient', tableName: 'notification_recipient' }
 );
 
-// Associations - many-to-many via the junction table
+// -- Associations
+// Many-to-many in both directions, going through the junction table.
+// `as` lets the logic layer reach for notification.recipients or
+// user.received_notifications when it needs to eager-load.
 
-Notification.belongsToMany(User, {
+Notification.belongsToMany(UserModel, {
   through: NotificationRecipient,
   foreignKey: 'notification_id',
   otherKey: 'user_id',
   as: 'recipients'
 });
-User.belongsToMany(Notification, {
+UserModel.belongsToMany(Notification, {
   through: NotificationRecipient,
   foreignKey: 'user_id',
   otherKey: 'notification_id',
   as: 'received_notifications'
 });
 
-// Initialization - proves connectivity before Express starts listening.
-// Does not run sequelize.sync(); the schema is owned by the DBA (Database Administrator).
+// -- Initialization
 
+/**
+ * Prove we can actually reach the database before Express starts
+ * listening. We do NOT run sequelize.sync() - the schema is owned by
+ * the DBA, and the app should not be inventing tables on its own.
+ *
+ * @returns {Promise<void>} Resolves once the connection is good.
+ */
 async function initialize() {
   await sequelize.authenticate();
 }
@@ -145,7 +162,7 @@ async function initialize() {
 module.exports = {
   sequelize,
   Op,
-  User,
+  UserModel,
   Notification,
   NotificationRecipient,
   initialize
