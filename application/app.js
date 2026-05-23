@@ -108,7 +108,7 @@ app.post('/signup', async (req, res, next) => {
     res.redirect('/signup/success');
   } catch (error) {
     if (error instanceof AuthError) {
-      req.flash('error', error.message);
+      res.locals.messages.error = [error.message];
       return res.render('signup', { title: 'Create Account', form });
     }
     next(error);
@@ -142,7 +142,7 @@ app.post('/login', async (req, res, next) => {
     res.redirect('/');
   } catch (error) {
     if (error instanceof AuthError) {
-      req.flash('error', error.message);
+      res.locals.messages.error = [error.message];
       return res.render('login', { title: 'Log In', form });
     }
     next(error);
