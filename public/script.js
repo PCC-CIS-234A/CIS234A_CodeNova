@@ -1,27 +1,6 @@
 // Wait until the page fully loads before attaching events.
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Expand / Collapse message preview in the table
-    document.querySelectorAll(".expand-btn").forEach(button => {
-        button.addEventListener("click", function (event) {
-            event.stopPropagation();
-
-            const index = this.getAttribute("data-index");
-            const preview = document.getElementById(`message-preview-${index}`);
-            const full = document.getElementById(`message-full-${index}`);
-
-            if (full.style.display === "none") {
-                preview.style.display = "none";
-                full.style.display = "inline";
-                this.textContent = "Collapse";
-            } else {
-                preview.style.display = "inline";
-                full.style.display = "none";
-                this.textContent = "Expand";
-            }
-        });
-    });
-
     // Function that fills the bottom details box
     function showNotificationDetails(row) {
         const detailsContent = document.getElementById("details-content");
@@ -35,44 +14,46 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // View Details button updates the bottom details box
-    document.querySelectorAll(".popup-btn").forEach(button => {
-        button.addEventListener("click", function (event) {
-            event.stopPropagation();
-
-            const row = this.closest(".notification-clickable-row");
-            showNotificationDetails(row);
-        });
-    });
-
-    // Clicking the row toggles the bottom details box
-    document.querySelectorAll(".notification-clickable-row").forEach(row => {
+    // Clicking the row expands/collapses the message and updates the bottom details box
+    document.querySelectorAll(".notification-clickable-row").forEach((row, index) => {
         row.addEventListener("click", function () {
-
             const detailsContent = document.getElementById("details-content");
-            const detailsBox = document.getElementById("notification-details");
+            const preview = document.getElementById(`message-preview-${index}`);
+            const full = document.getElementById(`message-full-${index}`);
 
-            // If already active, close it
+            // If this row is already open, close it
             if (this.classList.contains("active")) {
-
                 this.classList.remove("active");
 
+                preview.style.display = "inline";
+                full.style.display = "none";
+
                 detailsContent.innerHTML = `
-                <p>Select a notification to view details.</p>
-            `;
+                    <p>Select a notification to view details.</p>
+                `;
 
                 return;
             }
 
-            // Remove active from all rows
-            document.querySelectorAll(".notification-clickable-row").forEach(r => {
-                r.classList.remove("active");
+            // Close all other rows first
+            document.querySelectorAll(".notification-clickable-row").forEach((otherRow, otherIndex) => {
+                otherRow.classList.remove("active");
+
+                const otherPreview = document.getElementById(`message-preview-${otherIndex}`);
+                const otherFull = document.getElementById(`message-full-${otherIndex}`);
+
+                if (otherPreview && otherFull) {
+                    otherPreview.style.display = "inline";
+                    otherFull.style.display = "none";
+                }
             });
 
-            // Activate the clicked row
+            // Open the clicked row
             this.classList.add("active");
+            preview.style.display = "none";
+            full.style.display = "inline";
 
-            // Show details
+            // Update the bottom detail box
             showNotificationDetails(this);
         });
     });
