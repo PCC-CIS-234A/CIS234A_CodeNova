@@ -29,7 +29,12 @@ module.exports = {
         notificationRoles: (process.env.NOTIFICATION_ROLES || 'subscriber')
             .split(',')
             .map((r) => r.trim())
-            .filter(Boolean)
+            .filter(Boolean),
+        /* ----- Saul's code: dev bypass for Send Notification testing ----- */
+        devBypassNotifications: process.env.DEV_BYPASS_NOTIFICATIONS === 'true',
+        devBypassSenderName: process.env.DEV_BYPASS_SENDER_NAME || 'Dev bypass',
+        devBypassSenderEmail: (process.env.DEV_BYPASS_SENDER_EMAIL || '').trim()
+        /* ----- end Saul's code ----- */
     },
 
     // ---- smtp (SEND NOTIFICATION) ----

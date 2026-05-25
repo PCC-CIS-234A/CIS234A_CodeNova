@@ -22,6 +22,11 @@
       <% } else { %>
         <a href="/login">Login</a>
         <a href="/signup">Create Account</a>
+        <% /* ----- Saul's code ----- */ %>
+        <% if (typeof devBypassAvailable !== 'undefined' && devBypassAvailable) { %>
+        <a href="/dev-bypass">Dev Bypass</a>
+        <% } %>
+        <% /* ----- end Saul's code ----- */ %>
       <% } %>
     </div>
   </div>
