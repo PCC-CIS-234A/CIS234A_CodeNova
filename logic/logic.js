@@ -15,6 +15,9 @@ const bcrypt = require('bcryptjs');
 const config = require('../config');
 const { sequelize, Op, UserModel, Notification, NotificationRecipient } = require('../data/database');
 const User = require('../models/User');
+/* ----- Saul's code: email transport for Send Notification ----- */
+const { sendNotificationEmail } = require('./mail');
+/* ----- end Saul's code ----- */
 
 
 /** Encryption factor for bcrypt. Higher = slower = harder to brute-force. 12
@@ -95,6 +98,39 @@ class AuthError extends Error {
     this.name = 'AuthError';
   }
 }
+
+/* ----- Saul's code: route guard and sender resolution for Send Notification ----- */
+function mayAccessSendNotification(req) {
+  if (req.currentUser && canUserSendNotifications(req.currentUser)) return true;
+  if (config.app.devBypassNotifications && req.session && req.session.devBypass) return true;
+  return false;
+}
+
+function resolveBroadcastSender(req) {
+  const u = req.currentUser;
+  if (u && canUserSendNotifications(u)) {
+    return {
+      senderName: `${u.first_name} ${u.last_name}`,
+      senderEmail: u.email
+    };
+  }
+  if (config.app.devBypassNotifications && req.session && req.session.devBypass) {
+    const senderEmail =
+      config.app.devBypassSenderEmail ||
+      (config.smtp && config.smtp.user ? String(config.smtp.user).trim() : '');
+    if (!senderEmail) {
+      throw new AuthError(
+        'Dev bypass needs DEV_BYPASS_SENDER_EMAIL or SMTP_USER set for the sender reply-to line.'
+      );
+    }
+    return {
+      senderName: config.app.devBypassSenderName,
+      senderEmail
+    };
+  }
+  throw new AuthError('Not authorized to send notifications.');
+}
+/* ----- end Saul's code ----- */
 
 /**
  * Create a new user account. We build a User instance from the form,
@@ -228,26 +264,58 @@ async function getCurrentUser(userId) {
   return new User(row.toJSON()).toPublic();
 }
 
+/* ----- Saul's code: mass notification (SMTP + DB log) ----- */
 /**
  * Send one broadcast notification to every user whose role appears in
- * config.app.notificationRoles.
+ * config app notification roles.
  *
- * Currently a stub: the email transport (logic/mail.js) has been
- * removed. Calling this will throw so we don't silently "send"
- * notifications.
- *
- * @param {object} _opts     { subject, body, senderName, senderEmail }.
+ * @param {object} opts  { subject, body, senderName, senderEmail }.
  * @returns {Promise<void>}
- * @throws {Error}           Always, until the email layer is reimplemented.
  */
-async function sendBroadcastNotification(_opts) {
-  // Reference these so eslint and the linter see them as "used" -- they
-  // come back into play the moment the email layer is wired up again.
-  void config; void UserModel; void Notification; void NotificationRecipient; void Op; void sequelize;
-  throw new Error(
-    'Email layer (logic/mail.js) has been removed. Reimplement before calling sendBroadcastNotification.'
-  );
+async function sendBroadcastNotification({ subject, body, senderName, senderEmail }) {
+  const roleNames = config.app.notificationRoles;
+
+  const recipients = await UserModel.findAll({
+    where: {
+      role: { [Op.in]: roleNames },
+      email: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
+    },
+    attributes: ['id', 'email']
+  });
+
+  if (!recipients.length) {
+    throw new AuthError(
+      'No recipients found. Add users with a matching role (see NOTIFICATION_ROLES in .env).'
+    );
+  }
+
+  const bccAddresses = recipients.map((r) => r.email);
+  await sendNotificationEmail({
+    subject,
+    body,
+    senderName,
+    senderEmail,
+    bccAddresses
+  });
+
+  await sequelize.transaction(async (t) => {
+    const notification = await Notification.create(
+      {
+        sender_email: String(senderEmail).slice(0, 100),
+        subject: String(subject).slice(0, 150),
+        body,
+        recipient_count: recipients.length
+      },
+      { transaction: t }
+    );
+
+    await NotificationRecipient.bulkCreate(
+      recipients.map((r) => ({ notification_id: notification.id, user_id: r.id })),
+      { transaction: t }
+    );
+  });
 }
+/* ----- end Saul's code ----- */
 
 module.exports = {
   AuthError,
@@ -256,5 +324,9 @@ module.exports = {
   getCurrentUser,
   sendBroadcastNotification,
   canUserSendNotifications,
-  pickSignupRoleFromBody
+  pickSignupRoleFromBody,
+  /* ----- Saul's code ----- */
+  mayAccessSendNotification,
+  resolveBroadcastSender
+  /* ----- end Saul's code ----- */
 };

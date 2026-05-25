@@ -275,3 +275,67 @@ h1 {
   font-weight: bold;
   text-transform: capitalize;
 }
+
+/* ----- Saul's code: Send Notification page styles ----- */
+.card-wide {
+  max-width: 640px;
+}
+
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: #333;
+}
+
+.dev-bypass-banner {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #5c4a00;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 140px;
+  font-family: inherit;
+}
+
+#send-notification-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
+}
+#send-notification-btn .send-btn-spinner {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: send-spin 0.75s linear infinite;
+  flex-shrink: 0;
+}
+#send-notification-btn.is-sending {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+#send-notification-btn.is-sending .send-btn-label {
+  display: none;
+}
+#send-notification-btn.is-sending .send-btn-spinner {
+  display: block;
+}
+@keyframes send-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+/* ----- end Saul's code ----- */

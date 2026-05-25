@@ -15,6 +15,9 @@ const express = require('express');
 const session = require('express-session');
 const flash = require('connect-flash');
 const helmet = require('helmet');
+/* ----- Saul's code ----- */
+const config = require('../config');
+/* ----- end Saul's code ----- */
 
 const logic = require('../logic/logic');
 const { AuthError } = logic;
@@ -53,6 +56,10 @@ app.use(flash());
  */
 app.use(async (req, res, next) => {
   res.locals.currentUser = null;
+  /* ----- Saul's code: dev bypass flags for Send Notification ----- */
+  res.locals.devBypassAvailable = config.app.devBypassNotifications;
+  res.locals.devBypassActive = !!(config.app.devBypassNotifications && req.session.devBypass);
+  /* ----- end Saul's code ----- */
   res.locals.messages = {
     success: req.flash('success'),
     error: req.flash('error')
@@ -78,6 +85,59 @@ app.use(async (req, res, next) => {
 app.get('/', (req, res) => {
   res.render('home', { title: 'Home' });
 });
+
+/* ----- Saul's code: Send Notification routes ----- */
+app.get('/sendNotification', (req, res) => {
+  if (!logic.mayAccessSendNotification(req)) {
+    if (!req.currentUser) return res.redirect('/login');
+    req.flash('error', 'Only managers can send notifications.');
+    return res.redirect('/');
+  }
+  res.render('sendNotification', { title: 'Send Notification', form: {} });
+});
+
+app.post('/sendNotification', async (req, res) => {
+  if (!logic.mayAccessSendNotification(req)) {
+    if (!req.currentUser) return res.redirect('/login');
+    req.flash('error', 'Only managers can send notifications.');
+    return res.redirect('/');
+  }
+
+  const subject = (req.body.subject || '').trim();
+  const body = (req.body.body || '').trim();
+  const form = { subject, body };
+
+  if (!subject || !body) {
+    req.flash('error', 'Subject and message body are required.');
+    return res.render('sendNotification', { title: 'Send Notification', form });
+  }
+
+  try {
+    const { senderName, senderEmail } = logic.resolveBroadcastSender(req);
+    await logic.sendBroadcastNotification({
+      subject,
+      body,
+      senderName,
+      senderEmail
+    });
+    req.flash('success', 'Notification email sent.');
+    return res.redirect('/sendNotification');
+  } catch (error) {
+    req.flash('error', error.message || 'Could not send notification email.');
+    return res.render('sendNotification', { title: 'Send Notification', form });
+  }
+});
+
+app.get('/dev-bypass', (req, res) => {
+  if (!config.app.devBypassNotifications) {
+    req.flash('error', 'Dev bypass is not enabled on this server.');
+    return res.redirect('/login');
+  }
+  req.session.devBypass = true;
+  req.flash('success', 'Dev bypass: Test send notification without logging in.');
+  res.redirect('/sendNotification');
+});
+/* ----- end Saul's code ----- */
 
 // ---- Signup
 

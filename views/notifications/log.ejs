@@ -1,0 +1,107 @@
+<%- include('../partials/header', { title }) %>
+
+<div class="log-box">
+    <h1>Notification Log</h1>
+
+    <%- include('../partials/flash') %>
+
+    <form method="GET" action="/notifications/log" class="filter-bar">
+        <div class="filter-field">
+            <label class="form-label" for="from">From</label>
+            <input
+                    type="date"
+                    id="from"
+                    name="from"
+                    class="form-input"
+                    value="<%= filters.from || '' %>"
+            />
+        </div>
+
+        <div class="filter-field">
+            <label class="form-label" for="to">To</label>
+            <input
+                    type="date"
+                    id="to"
+                    name="to"
+                    class="form-input"
+                    value="<%= filters.to || '' %>"
+            />
+        </div>
+
+        <div class="filter-actions">
+            <button type="submit" class="btn btn-compact">Apply</button>
+            <a href="/notifications/log" class="btn btn-compact btn-secondary btn-link-action">Clear</a>
+        </div>
+    </form>
+
+    <p class="log-summary">
+        Showing <%= notifications.length %>
+        notification<%= notifications.length === 1 ? '' : 's' %><% if (filters.from || filters.to) { %>
+            between <%= filters.from || 'the beginning' %> and <%= filters.to || 'today' %><% } %>.
+    </p>
+
+    <% if (notifications.length === 0) { %>
+        <div class="log-empty">No notifications match the current filter.</div>
+    <% } else { %>
+        <table class="log-table">
+            <thead>
+            <tr>
+                <th>Date Sent</th>
+                <th>Sent By</th>
+                <th>Subject</th>
+                <th>Message Body</th>
+                <th>Recipients</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            <% notifications.forEach((n, index) => { %>
+                <tr
+                        class="notification-clickable-row"
+                        data-subject="<%= n.subject %>"
+                        data-body="<%= n.body %>"
+                        data-sender="<%= n.sender_email %>"
+                        data-date="<%= n.sent_at_display %>"
+                        data-recipients="<%= n.recipient_count %>"
+                >
+                    <td class="log-date"><%= n.sent_at_display %></td>
+                    <td><%= n.sender_email %></td>
+                    <td>
+                        <%= n.subject.length > 25
+                                ? n.subject.substring(0, 25) + '...'
+                                : n.subject
+                        %>
+                    </td>
+
+                    <td class="log-body">
+                        <span id="message-preview-<%= index %>">
+                            <%= n.body.length > 25
+                                    ? n.body.substring(0, 25) + '...'
+                                    : n.body
+                            %>
+                        </span>
+
+                        <span id="message-full-<%= index %>" style="display: none;">
+                            <%= n.body %>
+                        </span>
+                    </td>
+
+                    <td class="log-recipients"><%= n.recipient_count %></td>
+                </tr>
+            <% }) %>
+            </tbody>
+        </table>
+
+        <div id="notification-details" class="details-box">
+            <h2>Notification Details</h2>
+
+            <div id="details-content">
+                <p>Select a notification to view details.</p>
+            </div>
+        </div>
+    <% } %>
+</div>
+
+<script src="/script.js"></script>
+
+<%- include('../partials/footer') %>
