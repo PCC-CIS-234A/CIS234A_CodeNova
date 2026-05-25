@@ -1,5 +1,5 @@
 /*
-  Saul's code — Send Notification page (client-side only).
+  Saul's code — Send Notification page.
 
   On submit, disables the button, shows the inline spinner, then POSTs the form.
   Brief delay so the browser can paint the spinner before the real submit.

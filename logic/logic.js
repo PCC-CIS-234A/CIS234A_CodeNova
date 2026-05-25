@@ -267,7 +267,7 @@ async function getCurrentUser(userId) {
 /* ----- Saul's code: mass notification (SMTP + DB log) ----- */
 /**
  * Send one broadcast notification to every user whose role appears in
- * config.app.notificationRoles.
+ * config app notification roles.
  *
  * @param {object} opts  { subject, body, senderName, senderEmail }.
  * @returns {Promise<void>}
