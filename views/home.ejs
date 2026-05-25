@@ -1,0 +1,32 @@
+<%- include('partials/header', { title }) %>
+
+<div class="home-box">
+  <%- include('partials/flash') %>
+
+  <% if (currentUser) { %>
+    <h1>Welcome, <%= currentUser.first_name %>!</h1>
+    <p>You are logged in.</p>
+    <% /* ----- Saul's code ----- */ %>
+    <% if (String(currentUser.role || '').trim().toLowerCase() === 'manager') { %>
+    <div class="home-actions">
+      <a href="/sendNotification" class="btn btn-link-action">Send notification</a>
+    </div>
+    <% } %>
+    <% /* ----- end Saul's code ----- */ %>
+  <% } else { %>
+    <h1>Welcome!</h1>
+    <p>Please log in or create an account to continue.</p>
+
+    <div class="home-actions">
+      <a href="/login" class="btn btn-link-action">Login</a>
+      <a href="/signup" class="btn btn-link-action btn-secondary">Create Account</a>
+      <% /* ----- Saul's code ----- */ %>
+      <% if (typeof devBypassAvailable !== 'undefined' && devBypassAvailable) { %>
+      <a href="/dev-bypass" class="btn btn-link-action btn-secondary">Dev Bypass</a>
+      <% } %>
+      <% /* ----- end Saul's code ----- */ %>
+    </div>
+  <% } %>
+</div>
+
+<%- include('partials/footer') %>

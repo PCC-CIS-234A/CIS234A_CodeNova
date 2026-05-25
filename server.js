@@ -1,30 +1,46 @@
-// Entry point of the application. Sets up middleware, routes, and starts the server.
-const express = require("express");
-const path = require("path");
-const notificationRoutes = require("./application/notificationRoutes");
+/*
 
-const app = express();
-const PORT = 3000;
+Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis
 
-// Set EJS as the template engine and tell Express where the view files are stored.
-app.set("view engine", "ejs");
-app.set("views", path.join(__dirname, "views"));
+Noah McGarry - Account Creation/Login
+Saul Bravo - Send Notifications
+Rothy Thach - DB Interactions
+Maeve Davis - Notification Log
 
-// Serve static files such as CSS, images, and client-side JavaScript.
-app.use(express.static(path.join(__dirname, "public")));
+Express + EJS + Sequelize (SQL Server). Sessions for login state,
+bcrypt for password hashing, flash for messages.
 
-// Allow Express to read form data from POST requests.
-app.use(express.urlencoded({ extended: true }));
+  npm install
+  npm start    # http://localhost:5000
 
-// Redirect the home page to the notification log page.
-app.get("/", (req, res) => {
-    res.redirect("/notifications/log");
-});
+Architecture:
+  application/   - HTTP routes, view rendering            (top tier)
+  logic/         - validation, hashing, workflows         (middle tier)
+  data/          - Sequelize models and DB connection     (bottom tier)
+  models/        - plain domain classes (User, ...)       (shared)
 
-// Send all notification-related requests to the notification routes file.
-app.use("/notifications", notificationRoutes);
+This file is the entry point. Its only jobs are: load env vars,
+prove the database is reachable, and start the HTTP server. Anything
+more complicated belongs in one of the layered modules.
 
-// Start the web server.
-app.listen(PORT, () => {
-    console.log("Food Pantry app running at http://localhost:3000/notifications/log");
-});
+*/
+
+require('dotenv').config();
+
+const app = require('./application/app');
+const { initialize } = require('./data/database');
+
+const PORT = process.env.PORT || 5000;
+
+/**
+ * Boot sequence: authenticate to the database FIRST, and only then
+ * call app.listen().
+ */
+initialize()
+  .then(() => app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+  }))
+  .catch((error) => {
+    console.error('Failed to start server:', error);
+    process.exit(1);
+  });

@@ -1,0 +1,16 @@
+<%- include('partials/header', { title }) %>
+
+<div class="card">
+  <h1>Account Created</h1>
+
+  <%- include('partials/flash') %>
+
+  <p>Your account has been created successfully!</p>
+
+  <div class="home-actions">
+    <a href="/login" class="btn btn-link-action">Log In</a>
+    <a href="/" class="btn btn-link-action btn-secondary">Return Home</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,52 @@
+<% /* Saul's code — Send Notification page */ %>
+<%- include('partials/header', { title }) %>
+
+<% const notificationForm = (locals && locals.form) ? locals.form : {}; %>
+
+<div class="card card-wide">
+  <h1>Send Notification</h1>
+
+  <%- include('partials/flash') %>
+
+  <form id="send-notification-form" method="POST" action="/sendNotification">
+    <div class="form-group">
+      <label class="form-label" for="subject">Subject</label>
+      <input
+        type="text"
+        id="subject"
+        name="subject"
+        class="form-input"
+        maxlength="200"
+        placeholder="Enter a subject"
+        value="<%= notificationForm.subject != null ? notificationForm.subject : '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label class="form-label" for="body">Message Body</label>
+      <textarea
+        id="body"
+        name="body"
+        class="form-input form-textarea"
+        rows="8"
+        placeholder="Write your message..."
+        required
+      ><%= notificationForm.body != null ? notificationForm.body : '' %></textarea>
+    </div>
+
+    <button type="submit" class="btn" id="send-notification-btn" aria-live="polite">
+      <span class="send-btn-label">Send Notification</span>
+      <span class="send-btn-spinner" aria-hidden="true"></span>
+    </button>
+
+    <div class="form-secondary-actions">
+      <a href="/" class="btn btn-compact btn-secondary btn-link-action">Cancel</a>
+    </div>
+  </form>
+
+</div>
+
+<script defer src="/send-notification.js"></script>
+
+<%- include('partials/footer') %>

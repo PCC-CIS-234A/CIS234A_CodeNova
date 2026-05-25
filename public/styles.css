@@ -1,249 +1,341 @@
+/* Styles the full page background, base font, and default text color */
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: #f4f7fb;
-    color: #222;
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #222;
 }
 
+/* Styles the top navigation bar container */
 .navbar {
-    background: #008EAA;
-    color: white;
-    padding: 14px 24px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+  background: #008EAA;
+  color: white;
+  padding: 14px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
+/* Styles the clickable brand area that holds the logo and site title */
 .navbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    text-decoration: none;
-    color: white;
-    font-weight: bold;
-    font-size: 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  font-size: 22px;
 }
 
+/* Controls the size and display behavior of the logo image */
+.navbar-logo {
+  height: 42px;
+  width: auto;
+  display: block;
+}
+
+/* Styles the navigation links on the right side of the navbar */
 .navbar a {
-    color: white;
-    text-decoration: none;
-    margin-left: 14px;
-    font-weight: bold;
+  color: white;
+  text-decoration: none;
+  margin-left: 14px;
+  font-weight: bold;
 }
 
+/* Creates the main page area that centers content on the screen */
 .page {
-    min-height: calc(100vh - 60px);
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-    padding: 30px;
-    box-sizing: border-box;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
 }
 
-.log-box {
-    width: 100%;
-    max-width: 1000px;
-    background: white;
-    padding: 32px;
-    border-radius: 14px;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+/* Styles the main card used for the login and signup forms */
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: white;
+  padding: 32px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
 }
 
+/* Styles the main page headings */
 h1 {
-    margin-top: 0;
-    text-align: center;
-    color: #008EAA;
+  margin-top: 0;
+  text-align: center;
+  color: #008EAA;
 }
 
-.filter-bar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 16px;
-    align-items: end;
-    margin-bottom: 20px;
+/* Adds spacing below each form field group */
+.form-group {
+  margin-bottom: 16px;
 }
 
-.filter-field {
-    flex: 1;
-    min-width: 180px;
-}
-
+/* Styles the field name shown above each input */
 .form-label {
-    display: block;
-    font-weight: bold;
-    margin-bottom: 6px;
+  display: block;
+  margin-bottom: 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
 }
 
+/* Styles the text, email, and password input fields */
 .form-input {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid #ccd3e0;
-    border-radius: 8px;
-    font-size: 15px;
-    box-sizing: border-box;
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccd3e0;
+  border-radius: 8px;
+  font-size: 15px;
+  box-sizing: border-box;
 }
 
-.filter-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-}
-
+/* Styles the main action button on forms */
 .btn {
-    padding: 12px;
-    background: #008EAA;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 16px;
-    cursor: pointer;
-    font-weight: bold;
+  width: 100%;
+  padding: 12px;
+  background: #008EAA;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
 }
 
+/* Styles the logout button shown in the navbar */
+.btn-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  color: white;
+  text-decoration: none;
+  margin-left: 14px;
+  font-weight: bold;
+}
+
+/* Changes the button color when the mouse hovers over it */
 .btn:hover {
-    background: #16306f;
+  background: #16306f;
 }
 
+/* wrapper for revealing password */
+.password-wrapper {
+  position: relative;
+}
+
+.password-wrapper .form-input {
+  padding-right: 2.5rem;
+}
+
+/* Eye button to reveal password */
+.eye-btn {
+  position: absolute;
+  right: 0.6rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #888;
+  padding: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* Styles the small text section under the forms */
+.small-text {
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* Styles the links inside the small text section */
+.small-text a {
+  color: #008EAA;
+  text-decoration: none;
+  font-weight: bold;
+}
+
+/* Styles the base flash message box */
+.flash {
+  padding: 10px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+/* Styles success flash messages */
+.flash.success {
+  background: #e7f4e4;
+  color: #225c22;
+}
+
+/* Styles error flash messages */
+.flash.error {
+  background: #fde8e8;
+  color: #a12626;
+}
+
+/* Styles the centered content box used on the home page */
+.home-box {
+  max-width: 700px;
+  background: white;
+  padding: 36px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  text-align: center;
+}
+
+/* Holds the action buttons shown on the home page when logged out */
+.home-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* Row of small secondary buttons (Clear) shown directly under the
+   primary submit button on forms, centered so the small buttons look balanced
+   beneath the full-width submit button */
+.form-secondary-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  margin-top: 12px;
+}
+
+/* Simple horizontal centering wrapper used on the 404 page to center the
+   "Return to Home Screen" button inside the card */
+.center-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 16px;
+}
+
+/* Centers inline text inside a block element, used on the 404 page */
+.text-center {
+  text-align: center;
+}
+
+/* Anchor-styled variant of .btn */
+.btn-link-action {
+  width: auto;
+  padding: 12px 22px;
+  text-decoration: none;
+  display: inline-block;
+  color: white;
+}
+
+.btn-link-action:hover {
+  color: white;
+}
+
+/* Smaller inline variant of .btn used for Clear/Cancel under forms */
 .btn-compact {
-    width: auto;
-    padding: 10px 18px;
-    font-size: 14px;
-    text-decoration: none;
-    display: inline-block;
-    text-align: center;
+  width: auto;
+  padding: 10px 18px;
+  font-size: 14px;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
 }
 
+/* Secondary / neutral button color used for "Clear" */
 .btn-secondary {
-    background: #6c7a94;
+  background: #6c7a94;
 }
 
 .btn-secondary:hover {
-    background: #4a566e;
+  background: #4a566e;
 }
 
-.btn-link-action {
-    color: white;
-    text-decoration: none;
+/* Used so a form can sit inline in a navbar cell without adding its own
+   block-level layout. Replaces an inline style attribute that would be
+   blocked by helmet */
+.inline-form {
+  display: inline;
 }
 
-.flash {
-    padding: 10px;
-    border-radius: 8px;
-    margin-bottom: 14px;
-    text-align: center;
+/* Role marker shown on the home screen under the welcome message. Temporary? */
+.role-badge {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 4px 12px;
+  border-radius: 999px;
+  background: #e6f4f8;
+  color: #00657a;
+  font-size: 14px;
+  font-weight: bold;
+  text-transform: capitalize;
 }
 
-.flash.error {
-    background: #fde8e8;
-    color: #a12626;
+/* ----- Saul's code: Send Notification page styles ----- */
+.card-wide {
+  max-width: 640px;
 }
 
-.flash.success {
-    background: #e7f4e4;
-    color: #225c22;
+.form-label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+  color: #333;
 }
 
-.log-summary {
-    margin: 16px 0;
-    font-weight: bold;
+.dev-bypass-banner {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #5c4a00;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  text-align: center;
 }
 
-.log-empty {
-    padding: 16px;
-    background: #f4f7fb;
-    border: 1px solid #ccd3e0;
-    border-radius: 8px;
-    text-align: center;
+.form-textarea {
+  resize: vertical;
+  min-height: 140px;
+  font-family: inherit;
 }
 
-.log-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 18px;
+#send-notification-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 46px;
 }
-
-.log-table th,
-.log-table td {
-    border: 1px solid #ccd3e0;
-    padding: 12px;
-    text-align: left;
-    vertical-align: top;
+#send-notification-btn .send-btn-spinner {
+  display: none;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: send-spin 0.75s linear infinite;
+  flex-shrink: 0;
 }
-
-.log-table th {
-    background: #eaf4f7;
-    color: #222;
+#send-notification-btn.is-sending {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
 }
-
-.log-date {
-    white-space: nowrap;
+#send-notification-btn.is-sending .send-btn-label {
+  display: none;
 }
-
-.log-body {
-    max-width: 320px;
+#send-notification-btn.is-sending .send-btn-spinner {
+  display: block;
 }
-
-.log-recipients {
-    text-align: center;
-    font-weight: bold;
+@keyframes send-spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
-
-.form-secondary-actions {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    justify-content: flex-start;
-    margin-top: 10px;
-}
-
-.small-text {
-    text-align: center;
-    margin-top: 20px;
-}
-
-.small-text a {
-    color: #008EAA;
-    text-decoration: none;
-    font-weight: bold;
-}
-
-.notification-card {
-    cursor: pointer;
-    border: 1px solid #ccc;
-    padding: 16px;
-    margin-bottom: 12px;
-    border-radius: 8px;
-}
-
-.notification-details {
-    display: none;
-    margin-top: 12px;
-    padding: 12px;
-    background-color: #f5f5f5;
-    border-radius: 6px;
-}
-
-.notification-clickable-row {
-    cursor: pointer;
-}
-
-.notification-clickable-row:hover {
-    background-color: #f5f5f5;
-}
-
-.notification-clickable-row.active {
-    background-color: #eef6f8;
-}
-
-.details-box {
-    margin-top: 24px;
-    padding: 18px;
-    background: #f9f9f9;
-    border: 1px solid #ccd3e0;
-    border-radius: 10px;
-}
-
-.details-box h2 {
-    margin-top: 0;
-    color: #008EAA;
-}
+/* ----- end Saul's code ----- */
