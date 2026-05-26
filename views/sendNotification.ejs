@@ -8,6 +8,14 @@
 
   <%- include('partials/flash') %>
 
+  <% /* ----- Saul's code: dev bypass banner ----- */ %>
+  <% if (locals.devBypassActive) { %>
+  <div class="dev-bypass-banner">
+    ⚠️ Dev bypass active — sending as <strong><%= locals.devBypassSenderName || 'Dev bypass' %></strong>. Not logged in.
+  </div>
+  <% } %>
+  <% /* ----- end Saul's code ----- */ %>
+
   <form id="send-notification-form" method="POST" action="/sendNotification">
     <div class="form-group">
       <label class="form-label" for="subject">Subject</label>

@@ -29,11 +29,16 @@
           <button type="submit" class="btn-link">Logout</button>
         </form>
       <% } else { %>
-        <a href="/login">Login</a>
-        <a href="/signup">Create Account</a>
         <% /* ----- Saul's code ----- */ %>
-        <% if (typeof devBypassAvailable !== 'undefined' && devBypassAvailable) { %>
-        <a href="/dev-bypass">Dev Bypass</a>
+        <% if (typeof devBypassActive !== 'undefined' && devBypassActive) { %>
+          <a href="/sendNotification">Send Notification</a>&nbsp;&nbsp;
+          <a href="/notifications/log">Notification Log</a>&nbsp;&nbsp;&nbsp;
+        <% } else { %>
+          <a href="/login">Login</a>
+          <a href="/signup">Create Account</a>
+          <% if (typeof devBypassAvailable !== 'undefined' && devBypassAvailable) { %>
+          <a href="/dev-bypass">Dev Bypass</a>
+          <% } %>
         <% } %>
         <% /* ----- end Saul's code ----- */ %>
       <% } %>
