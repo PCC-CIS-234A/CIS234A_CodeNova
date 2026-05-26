@@ -1,4 +1,3 @@
-const Notification = require("./Notification");
 const notificationRepository = require("../data/notificationRepository");
 
 // Gets notifications from the data layer and applies optional date filtering.

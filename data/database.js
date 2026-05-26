@@ -98,7 +98,10 @@ Notification.init(
     sender_email: { type: DataTypes.STRING(100), allowNull: false },
     subject: { type: DataTypes.STRING(150), allowNull: false },
     body: { type: DataTypes.TEXT, allowNull: false },
-    recipient_count: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 }
+    recipient_count: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    // allowNull omitted intentionally — the DB column has DEFAULT GETDATE()
+    // and we never pass sent_at on INSERT, so SQL Server sets it automatically.
+    sent_at: { type: DataTypes.DATE }
   },
   { sequelize, modelName: 'Notification', tableName: 'notifications' }
 );

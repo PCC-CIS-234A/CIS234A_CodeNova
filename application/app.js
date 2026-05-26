@@ -109,7 +109,7 @@ app.post('/sendNotification', async (req, res) => {
   const form = { subject, body };
 
   if (!subject || !body) {
-    req.flash('error', 'Subject and message body are required.');
+    res.locals.messages.error = ['Subject and message body are required.'];
     return res.render('sendNotification', { title: 'Send Notification', form });
   }
 
@@ -124,7 +124,7 @@ app.post('/sendNotification', async (req, res) => {
     req.flash('success', 'Notification email sent.');
     return res.redirect('/sendNotification');
   } catch (error) {
-    req.flash('error', error.message || 'Could not send notification email.');
+    res.locals.messages.error = [error.message || 'Could not send notification email.'];
     return res.render('sendNotification', { title: 'Send Notification', form });
   }
 });
