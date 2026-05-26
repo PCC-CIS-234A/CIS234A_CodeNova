@@ -15,6 +15,15 @@
 
     <div>
       <% if (currentUser) { %>
+        <% /* ----- Noah's code: role-based nav links ----- */ %>
+        <% const _navRole = String(currentUser.role || '').trim().toLowerCase(); %>
+        <% if (_navRole === 'manager') { %>
+          <a href="/sendNotification">Send Notification</a>&nbsp;&nbsp;
+          <a href="/notifications/log">Notification Log</a>&nbsp;&nbsp;&nbsp;
+        <% } else if (_navRole === 'staff') { %>
+          <a href="/notifications/log">Notification Log</a>&nbsp;&nbsp;&nbsp;
+        <% } %>
+        <% /* ----- end Noah's code ----- */ %>
         <span>Hello, <%= currentUser.first_name %>!&nbsp;&nbsp;&nbsp;</span>
         <form method="POST" action="/logout" class="inline-form">
           <button type="submit" class="btn-link">Logout</button>

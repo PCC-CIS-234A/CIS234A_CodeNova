@@ -339,3 +339,154 @@ h1 {
   }
 }
 /* ----- end Saul's code ----- */
+
+/* ----- Maeve's / Noah's code: Notification Log page styles ----- */
+
+/* Outer page container for the log — wider than the login card to fit the table */
+.log-box {
+  width: 100%;
+  max-width: 1000px;
+  background: white;
+  padding: 36px;
+  border-radius: 14px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  box-sizing: border-box;
+}
+
+.log-box h1 {
+  text-align: center;
+  color: #008EAA;
+  margin-top: 0;
+  margin-bottom: 24px;
+}
+
+/* Filter bar: date inputs and Apply/Clear buttons sit side by side */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  background: #f4f7fb;
+  border: 1px solid #dde3ed;
+  border-radius: 10px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.filter-field .form-input {
+  width: auto;
+  padding: 8px 12px;
+  font-size: 14px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding-top: 20px;
+}
+
+/* Small count line above the table */
+.log-summary {
+  font-size: 14px;
+  color: #555;
+  margin-bottom: 14px;
+}
+
+/* Shown when there are no results */
+.log-empty {
+  text-align: center;
+  color: #777;
+  padding: 32px 0;
+  font-size: 15px;
+}
+
+/* The notifications table */
+.log-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  margin-bottom: 24px;
+}
+
+.log-table thead tr {
+  background: #008EAA;
+  color: white;
+}
+
+.log-table th {
+  text-align: left;
+  padding: 10px 14px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.log-table td {
+  padding: 10px 14px;
+  border-bottom: 1px solid #e8ecf2;
+  vertical-align: top;
+}
+
+/* Alternating row shading */
+.log-table tbody tr:nth-child(even) {
+  background: #f7f9fc;
+}
+
+/* Highlight row on hover to signal it's clickable */
+.notification-clickable-row {
+  cursor: pointer;
+}
+
+.notification-clickable-row:hover {
+  background: #e6f4f8 !important;
+}
+
+.log-date {
+  white-space: nowrap;
+  color: #555;
+  font-size: 13px;
+}
+
+.log-body {
+  max-width: 220px;
+  color: #444;
+}
+
+.log-recipients {
+  text-align: center;
+  font-weight: bold;
+  color: #008EAA;
+}
+
+/* Detail panel shown below the table when a row is clicked */
+.details-box {
+  background: #f4f7fb;
+  border: 1px solid #dde3ed;
+  border-radius: 10px;
+  padding: 20px 24px;
+  margin-top: 8px;
+}
+
+.details-box h2 {
+  margin-top: 0;
+  color: #008EAA;
+  font-size: 17px;
+}
+
+.details-box p {
+  margin: 6px 0;
+  font-size: 14px;
+  color: #444;
+}
+
+.details-box strong {
+  color: #222;
+}
+
+/* ----- end Maeve's / Noah's code ----- */

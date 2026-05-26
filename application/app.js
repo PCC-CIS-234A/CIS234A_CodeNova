@@ -17,6 +17,7 @@ const flash = require('connect-flash');
 const helmet = require('helmet');
 /* ----- Saul's code ----- */
 const config = require('../config');
+const notificationRoutes = require('./notificationRoutes');
 /* ----- end Saul's code ----- */
 
 const logic = require('../logic/logic');
@@ -137,7 +138,9 @@ app.get('/dev-bypass', (req, res) => {
   req.flash('success', 'Dev bypass: Test send notification without logging in.');
   res.redirect('/sendNotification');
 });
-/* ----- end Saul's code ----- */
+/* ----- Maeve's code: Notification log route ----- */
+app.use('/notifications', notificationRoutes);
+/* ----- end Maeve's code ----- */
 
 // ---- Signup
 
