@@ -102,7 +102,7 @@ class AuthError extends Error {
 /* ----- Saul's code: route guard and sender resolution for Send Notification ----- */
 function mayAccessSendNotification(req) {
   if (req.currentUser && canUserSendNotifications(req.currentUser)) return true;
-  if (config.app.devBypassNotifications && req.session && req.session.devBypass) return true;
+  if (!req.currentUser && config.app.devBypassNotifications && req.session && req.session.devBypass) return true;
   return false;
 }
 
@@ -114,7 +114,7 @@ function resolveBroadcastSender(req) {
       senderEmail: u.email
     };
   }
-  if (config.app.devBypassNotifications && req.session && req.session.devBypass) {
+  if (!u && config.app.devBypassNotifications && req.session && req.session.devBypass) {
     const senderEmail =
       config.app.devBypassSenderEmail ||
       (config.smtp && config.smtp.user ? String(config.smtp.user).trim() : '');
