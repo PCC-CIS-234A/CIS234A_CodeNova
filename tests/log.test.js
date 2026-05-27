@@ -1,4 +1,4 @@
-const assert = require("assert");
+
 const { isInvalidDateRange } = require("../logic/validation");
 
 describe("Notification Date Validation", () => {

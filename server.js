@@ -1,6 +1,6 @@
 /*
 
-Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis
+Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis, Rothy Thachnpm i
 
 Noah McGarry - Account Creation/Login
 Saul Bravo - Send Notifications

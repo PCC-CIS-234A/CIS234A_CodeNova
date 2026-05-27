@@ -1,5 +1,5 @@
 /*
-  Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis
+  Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis, Rothy Thach
   tests/User.test.js
 
   Unit tests for models/User.js
