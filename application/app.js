@@ -135,7 +135,7 @@ app.get('/dev-bypass', (req, res) => {
     return res.redirect('/login');
   }
   req.session.devBypass = true;
-  req.flash('success', 'Dev bypass: Test send notification without logging in.');
+  /*req.flash('success', 'Dev bypass: Test send notification without logging in.');*/
   res.redirect('/sendNotification');
 });
 /* ----- Maeve's code: Notification log route ----- */
