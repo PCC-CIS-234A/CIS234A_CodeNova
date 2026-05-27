@@ -8,7 +8,7 @@
     "dev": "node --watch server.js",
     "test": "node --test tests/sendNotification.validation.test.js",
     "test:userclass": "jest tests/User.test.js",
-    "test:log": "node --test tests/log.test.js"
+    "test:log": "jest tests/log.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
