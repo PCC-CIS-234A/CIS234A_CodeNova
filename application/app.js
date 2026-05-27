@@ -202,6 +202,9 @@ app.post('/login', async (req, res, next) => {
   try {
     const { userId } = await logic.login(req.body);
     req.session.userId = userId;
+    // Clear any leftover dev-bypass flag so a real login never shows
+    // the dev-bypass banner or inherits bypass-mode access.
+    delete req.session.devBypass;
     res.redirect('/');
   } catch (error) {
     if (error instanceof AuthError) {

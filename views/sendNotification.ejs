@@ -9,7 +9,7 @@
   <%- include('partials/flash') %>
 
   <% /* ----- Saul's code: dev bypass banner ----- */ %>
-  <% if (locals.devBypassActive) { %>
+  <% if (locals.devBypassActive && !locals.currentUser) { %>
   <div class="dev-bypass-banner">
     ⚠️ Dev bypass active — sending as <strong><%= locals.devBypassSenderName || 'Dev bypass' %></strong>. Not logged in.
   </div>
