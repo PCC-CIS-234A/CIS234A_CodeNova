@@ -264,6 +264,157 @@ async function getCurrentUser(userId) {
   return new User(row.toJSON()).toPublic();
 }
 
+/**
+ * Update the current user's editable details. The role column is
+ * deliberately NOT writeable here -- a user can change their name,
+ * username, email, and (optionally) password, but never their own role.
+ *
+ * If password is provided, current_password must also be provided and
+ * must match the stored hash. Leaving the new-password field blank means
+ * "don't change my password" and current_password is then ignored.
+ *
+ * Throws AuthError for any user-fixable problem (bad current password,
+ * validation failure, duplicate username/email). Anything else propagates.
+ *
+ * @param {number} userId  The id of the user being edited.
+ * @param {object} body    The Express req.body from POST /account.
+ * @returns {Promise<{userId:number, first_name:string}>}
+ */
+async function updateAccount(userId, body) {
+  const row = await UserModel.findByPk(userId);
+  if (!row) {
+    throw new AuthError('Account not found.');
+  }
+
+  // Build a User domain object using the current role from
+  // the DB, not anything in the request body. This is the defense
+  // that stops a user from elevating their own role via a hidden field.
+  const user = new User({
+    id:         row.id,
+    username:   body.username,
+    first_name: body.first_name,
+    last_name:  body.last_name,
+    email:      body.email,
+    role:       row.role
+  });
+
+  const fieldError = user.validate();
+  if (fieldError) throw new AuthError(fieldError);
+
+  // Uniqueness checks: username and email must remain unique across the
+  // table, except for the current user's own row.
+  const dupUsername = await UserModel.findOne({
+    where: { username: user.username, id: { [Op.ne]: userId } },
+    attributes: ['id']
+  });
+  if (dupUsername) {
+    throw new AuthError('That username is already taken.');
+  }
+  const dupEmail = await UserModel.findOne({
+    where: { email: user.email, id: { [Op.ne]: userId } },
+    attributes: ['id']
+  });
+  if (dupEmail) {
+    throw new AuthError('That email address is already in use.');
+  }
+
+  // Password change is optional. If the new-password field is non-empty,
+  // we require current_password to match and the two new fields to agree.
+  const newPassword = body.password || '';
+  const confirmPassword = body.confirm_password || '';
+  let newHash = null;
+  if (newPassword || confirmPassword) {
+    const currentPassword = body.current_password || '';
+    if (!currentPassword) {
+      throw new AuthError('Enter your current password to change it.');
+    }
+    const ok = await bcrypt.compare(currentPassword, row.password_hash);
+    if (!ok) {
+      throw new AuthError('Current password is incorrect.');
+    }
+    const passwordError = User.validatePassword(newPassword, confirmPassword);
+    if (passwordError) throw new AuthError(passwordError);
+    newHash = await bcrypt.hash(newPassword, SALT_ROUNDS);
+  }
+
+  try {
+    await sequelize.transaction(async (t) => {
+      const updates = {
+        username:   user.username,
+        first_name: user.first_name,
+        last_name:  user.last_name,
+        email:      user.email
+      };
+      if (newHash) updates.password_hash = newHash;
+      await row.update(updates, { transaction: t });
+    });
+    return { userId: row.id, first_name: row.first_name };
+  } catch (err) {
+    if (err && err.name === 'SequelizeUniqueConstraintError') {
+      throw new AuthError('That username or email is already in use.');
+    }
+    throw new AuthError(err.message || 'Could not update your account.');
+  }
+}
+
+/**
+ * Permanently delete the current user's account row. Requires the user
+ * to re-supply their password as a second authentication check.
+ *
+ * The notifications the user received stay in the notifications table
+ * (broadcast audit log), but the user's rows in notification_recipient
+ * and user_list have to be cleared first (Those FKs have no
+ * ON DELETE CASCADE, so leaving them in place would make the users row
+ * undeletable.
+ *
+ * @param {number} userId    The id of the user being deleted.
+ * @param {string} password  The password the user typed on the confirm page.
+ * @returns {Promise<void>}
+ */
+async function deleteAccount(userId, password) {
+  const row = await UserModel.findByPk(userId);
+  if (!row) {
+    throw new AuthError('Account not found.');
+  }
+  // Make them prove account ownership one more time. A logged-in session
+  // alone isn't enough for something this destructive -- if a browser is
+  // left open, or a cookie is hijacked, the password check is the last
+  // line of defense.
+  const supplied = password || '';
+  if (!supplied) {
+    throw new AuthError('Enter your password to confirm.');
+  }
+  const ok = await bcrypt.compare(supplied, row.password_hash);
+  if (!ok) {
+    throw new AuthError('Password is incorrect. Account was not deleted.');
+  }
+  try {
+    await sequelize.transaction(async (t) => {
+      // Clear the junction rows that point at this user. We keep the
+      // parent notifications themselves so the broadcast log stays intact.
+      await NotificationRecipient.destroy({
+        where: { user_id: userId },
+        transaction: t
+      });
+      // user_list has a FK to users(user_id) but no Sequelize model in
+      // this app, so we hit it with a raw parameterized DELETE. Same
+      // story as notification_recipient: clear the references first
+      // or SQL Server refuses to drop the parent row.
+      await sequelize.query(
+        'DELETE FROM user_list WHERE user_id = :userId',
+        {
+          replacements: { userId },
+          type: sequelize.QueryTypes.DELETE,
+          transaction: t
+        }
+      );
+      await row.destroy({ transaction: t });
+    });
+  } catch (err) {
+    throw new AuthError(err.message || 'Could not delete your account.');
+  }
+}
+
 /* ----- Saul's code: mass notification (SMTP + DB log) ----- */
 /**
  * Send one broadcast notification to every user whose role appears in
@@ -322,6 +473,8 @@ module.exports = {
   signup,
   login,
   getCurrentUser,
+  updateAccount,
+  deleteAccount,
   sendBroadcastNotification,
   canUserSendNotifications,
   pickSignupRoleFromBody,

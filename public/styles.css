@@ -490,3 +490,66 @@ h1 {
 }
 
 /* ----- end Maeve's / Noah's code ----- */
+
+/* Account edit + delete page styles */
+
+/* Destructive-action button used for "Delete My Account". Works for
+   both <button> and <a> so the account page can link to the confirm
+   screen using the same style. */
+.btn-danger {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px;
+  background: #a12626;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  cursor: pointer;
+  font-weight: bold;
+  text-align: center;
+  text-decoration: none;
+}
+
+.btn-danger:hover {
+  background: #7d1c1c;
+  color: white;
+}
+
+/* Disabled inputs (used for the read-only role field on the account
+   page) should look obviously non-editable */
+.form-input:disabled {
+  background: #f4f7fb;
+  color: #555;
+  cursor: not-allowed;
+  text-transform: capitalize;
+}
+
+/* Summary list shown on the delete-confirmation page so the user can
+   see exactly which account is about to be removed. */
+.delete-summary {
+  background: #f4f7fb;
+  border: 1px solid #dde3ed;
+  border-radius: 10px;
+  padding: 14px 18px;
+  margin: 14px 0;
+}
+
+.delete-summary dt {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #555;
+  margin-top: 8px;
+}
+
+.delete-summary dt:first-child {
+  margin-top: 0;
+}
+
+.delete-summary dd {
+  margin: 2px 0 0;
+  font-size: 15px;
+  color: #222;
+}

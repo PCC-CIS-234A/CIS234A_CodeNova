@@ -52,7 +52,7 @@ app.use(flash());
  * (for routes) and res.locals.currentUser (for views).
  *
  * If the session points at a user that no longer exists -- we deleted
- * them, the DB was wiped, etc. -- we clear the session id and just
+ * them, the DB was wiped, etc. - we clear the session id and just
  * carry on as if they were logged out.
  */
 app.use(async (req, res, next) => {
@@ -220,6 +220,80 @@ app.post('/login', async (req, res, next) => {
 /** Destroy the session entirely and send them home as a guest. */
 app.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
+});
+
+// ---- Account edit + delete
+
+/**
+ * Render the account-edit form for the currently logged-in user.
+ * Guests get bounced to login. The form is pre-filled from the user's
+ * current details so they only need to change what they want to change.
+ */
+app.get('/account', (req, res) => {
+  if (!req.currentUser) return res.redirect('/login');
+  const form = {
+    username:   req.currentUser.username,
+    first_name: req.currentUser.first_name,
+    last_name:  req.currentUser.last_name,
+    email:      req.currentUser.email
+  };
+  res.render('account', { title: 'Edit Account', form });
+});
+
+/**
+ * Apply the edits from the account-edit form. Role is never read from
+ * the request body - the logic layer pins it to the row's current
+ * value - so submitting a forged "role" field has no effect.
+ */
+app.post('/account', async (req, res, next) => {
+  if (!req.currentUser) return res.redirect('/login');
+  const form = {
+    username:   (req.body.username || '').trim().toLowerCase(),
+    first_name: (req.body.first_name || '').trim(),
+    last_name:  (req.body.last_name || '').trim(),
+    email:      (req.body.email || '').trim().toLowerCase()
+  };
+  try {
+    await logic.updateAccount(req.currentUser.id, req.body);
+    req.flash('success', 'Account updated successfully.');
+    return res.redirect('/account');
+  } catch (error) {
+    if (error instanceof AuthError) {
+      res.locals.messages.error = [error.message];
+      return res.render('account', { title: 'Edit Account', form });
+    }
+    next(error);
+  }
+});
+
+/**
+ * Render the delete-confirmation page. The /account page links here
+ * instead of submitting straight to the destructive POST so the user
+ * sees their account details one more time and has to type their
+ * password before anything actually happens.
+ */
+app.get('/account/delete', (req, res) => {
+  if (!req.currentUser) return res.redirect('/login');
+  res.render('account-delete', { title: 'Delete Account' });
+});
+
+/**
+ * Permanently delete the current user's account, then end the session
+ * and send them back to the home page as a guest. The user must include
+ * the correct password in the POST body; the logic layer enforces this.
+ */
+app.post('/account/delete', async (req, res, next) => {
+  if (!req.currentUser) return res.redirect('/login');
+  try {
+    await logic.deleteAccount(req.currentUser.id, req.body.password || '');
+    req.session.destroy(() => res.redirect('/'));
+  } catch (error) {
+    if (error instanceof AuthError) {
+      req.flash('error', error.message);
+      return res.redirect('/account/delete');
+    }
+    next(error);
+  }
 });
 
 // -- 404 fallback

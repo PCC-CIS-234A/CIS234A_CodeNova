@@ -1,0 +1,58 @@
+<%- include('partials/header', { title }) %>
+
+<div class="card">
+  <h1 style="color:#a12626;">Delete account?</h1>
+
+  <%- include('partials/flash') %>
+
+  <!--
+    Final confirmation page. Reached by clicking "Delete My Account" on
+    the /account page. We require the user to re-type their password
+    here so a left-open browser or hijacked session can't destroy
+    the account by accessing delete.
+  -->
+  <p>
+    You are about to <strong>permanently delete</strong> the following account:
+  </p>
+
+  <dl class="delete-summary">
+    <dt>Username</dt>
+    <dd><%= currentUser.username %></dd>
+
+    <dt>Name</dt>
+    <dd><%= currentUser.first_name %> <%= currentUser.last_name %></dd>
+
+    <dt>Email</dt>
+    <dd><%= currentUser.email %></dd>
+  </dl>
+
+  <p>
+    This will sign you out and remove your account immediately.
+    The notifications you've received will be cleared from your record,
+    but the broadcast log itself stays intact. <strong>This cannot be undone.</strong>
+  </p>
+
+  <form method="POST" action="/account/delete">
+    <div class="form-group">
+      <label for="delete-confirm-password" class="form-label">Type your password to confirm</label>
+      <div class="password-wrapper">
+        <input type="password" id="delete-confirm-password" name="password" class="form-input" autocomplete="current-password" required />
+        <button type="button" class="eye-btn" aria-label="Show password">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn btn-danger">Yes, permanently delete my account</button>
+
+    <div class="form-secondary-actions">
+      <a href="/account" class="btn btn-compact btn-secondary">Cancel</a>
+    </div>
+  </form>
+</div>
+
+<script src="/password-toggle.js"></script>
+<%- include('partials/footer') %>

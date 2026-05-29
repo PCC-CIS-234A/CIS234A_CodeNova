@@ -1,0 +1,146 @@
+<%- include('partials/header', { title }) %>
+
+<div class="card">
+  <h1>Edit Account</h1>
+
+  <%- include('partials/flash') %>
+
+  <!--
+    Account-edit form. Role is displayed read-only on purpose: users are
+    not allowed to change their own role from this page. Even if someone
+    tries to inject a "role" field into the POST, the logic layer pins
+    the role to the row's current value.
+  -->
+  <form method="POST" action="/account">
+    <div class="form-group">
+      <label for="account-username" class="form-label">Username</label>
+      <input
+        type="text"
+        id="account-username"
+        name="username"
+        class="form-input"
+        value="<%= (form && form.username) || '' %>"
+        pattern="[A-Za-z0-9._\-]{3,30}"
+        title="3-30 characters: letters, numbers, dot, underscore, or hyphen"
+        autocomplete="username"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="account-first-name" class="form-label">First name</label>
+      <input
+        type="text"
+        id="account-first-name"
+        name="first_name"
+        class="form-input"
+        value="<%= (form && form.first_name) || '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="account-last-name" class="form-label">Last name</label>
+      <input
+        type="text"
+        id="account-last-name"
+        name="last_name"
+        class="form-input"
+        value="<%= (form && form.last_name) || '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="account-email" class="form-label">Email address</label>
+      <input
+        type="email"
+        id="account-email"
+        name="email"
+        class="form-input"
+        value="<%= (form && form.email) || '' %>"
+        required
+      />
+    </div>
+
+    <div class="form-group">
+      <label for="account-role" class="form-label">Account type</label>
+      <input
+        type="text"
+        id="account-role"
+        class="form-input"
+        value="<%= currentUser.role %>"
+        disabled
+        readonly
+        title="Account type cannot be changed from this page."
+      />
+      <div class="small-text" style="text-align:left;margin-top:4px;">
+        Account type cannot be changed here.
+      </div>
+    </div>
+
+    <hr style="border:none;border-top:1px solid #e8ecf2;margin:20px 0;" />
+
+    <p class="small-text" style="text-align:left;">
+      Leave the password fields blank to keep your current password.
+    </p>
+
+    <div class="form-group">
+      <label for="account-current-password" class="form-label">Current password</label>
+      <div class="password-wrapper">
+        <input type="password" id="account-current-password" name="current_password" class="form-input" autocomplete="current-password" />
+        <button type="button" class="eye-btn" aria-label="Show password">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="account-password" class="form-label">New password</label>
+      <div class="password-wrapper">
+        <input type="password" id="account-password" name="password" class="form-input" placeholder="Min 8 chars with 1 uppercase, 1 number & 1 symbol" title="At least 8 characters, with one uppercase letter, one number, and one special character." autocomplete="new-password" />
+        <button type="button" class="eye-btn" aria-label="Show password">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="account-confirm" class="form-label">Confirm new password</label>
+      <div class="password-wrapper">
+        <input type="password" id="account-confirm" name="confirm_password" class="form-input" autocomplete="new-password" />
+        <button type="button" class="eye-btn" aria-label="Show password">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+            <circle cx="12" cy="12" r="3"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <button type="submit" class="btn">Save Changes</button>
+
+    <div class="form-secondary-actions">
+      <a href="/" class="btn btn-compact btn-secondary">Cancel</a>
+    </div>
+  </form>
+
+  <!--
+    The delete button is a link to /account/delete (a confirmation page),
+    not a destructive POST. The real DELETE happens on the next screen,
+    after the user re-confirms by typing their password.
+  -->
+  <hr style="border:none;border-top:1px solid #e8ecf2;margin:24px 0;" />
+  <h2 style="color:#a12626;text-align:center;margin-bottom:8px;">Danger zone</h2>
+  <p class="small-text">Deleting your account is permanent and cannot be undone.</p>
+  <a href="/account/delete" class="btn btn-danger">Delete My Account</a>
+</div>
+
+<script src="/password-toggle.js"></script>
+<%- include('partials/footer') %>
