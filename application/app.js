@@ -88,13 +88,20 @@ app.get('/', (req, res) => {
 });
 
 /* ----- Saul's code: Send Notification routes ----- */
-app.get('/sendNotification', (req, res) => {
+app.get('/sendNotification', async (req, res, next) => {
   if (!logic.mayAccessSendNotification(req)) {
     if (!req.currentUser) return res.redirect('/login');
     req.flash('error', 'Only managers can send notifications.');
     return res.redirect('/');
   }
-  res.render('sendNotification', { title: 'Send Notification', form: {} });
+  try {
+    /* ----- Saul Sprint 2: load subscriber lists for multi-list send ----- */
+    const subscriberLists = await logic.subscriberListService.getAllLists();
+    res.render('sendNotification', { title: 'Send Notification', form: {}, subscriberLists });
+    /* ----- end Saul Sprint 2 ----- */
+  } catch (error) {
+    next(error);
+  }
 });
 
 app.post('/sendNotification', async (req, res) => {
@@ -106,11 +113,21 @@ app.post('/sendNotification', async (req, res) => {
 
   const subject = (req.body.subject || '').trim();
   const body = (req.body.body || '').trim();
-  const form = { subject, body };
+  /* ----- Saul Sprint 2: preserve selected list ids on validation errors ----- */
+  const selectedListIds = logic.subscriberListService.parseListIdsFromBody(req.body);
+  const form = { subject, body, selectedListIds };
+  /* ----- end Saul Sprint 2 ----- */
 
   if (!subject || !body) {
     res.locals.messages.error = ['Subject and message body are required.'];
-    return res.render('sendNotification', { title: 'Send Notification', form });
+    const subscriberLists = await logic.subscriberListService.getAllLists();
+    return res.render('sendNotification', { title: 'Send Notification', form, subscriberLists });
+  }
+
+  if (!selectedListIds.length) {
+    res.locals.messages.error = ['Select at least one subscriber list.'];
+    const subscriberLists = await logic.subscriberListService.getAllLists();
+    return res.render('sendNotification', { title: 'Send Notification', form, subscriberLists });
   }
 
   try {
@@ -119,13 +136,15 @@ app.post('/sendNotification', async (req, res) => {
       subject,
       body,
       senderName,
-      senderEmail
+      senderEmail,
+      listIds: selectedListIds
     });
     req.flash('success', 'Notification email sent.');
     return res.redirect('/sendNotification');
   } catch (error) {
     res.locals.messages.error = [error.message || 'Could not send notification email.'];
-    return res.render('sendNotification', { title: 'Send Notification', form });
+    const subscriberLists = await logic.subscriberListService.getAllLists();
+    return res.render('sendNotification', { title: 'Send Notification', form, subscriberLists });
   }
 });
 
@@ -145,9 +164,16 @@ app.use('/notifications', notificationRoutes);
 // ---- Signup
 
 /** Render the signup form. If they're already logged in, send them home. */
-app.get('/signup', (req, res) => {
+app.get('/signup', async (req, res, next) => {
   if (req.currentUser) return res.redirect('/');
-  res.render('signup', { title: 'Create Account', form: {} });
+  try {
+    /* ----- Saul Sprint 2: pass subscriber lists for student campus radios ----- */
+    const subscriberLists = await logic.subscriberListService.getCampusLists();
+    res.render('signup', { title: 'Create Account', form: {}, subscriberLists });
+    /* ----- end Saul Sprint 2 ----- */
+  } catch (error) {
+    next(error);
+  }
 });
 
 /**
@@ -160,7 +186,11 @@ app.post('/signup', async (req, res, next) => {
     username: (req.body.username || '').trim().toLowerCase(),
     first_name: (req.body.first_name || '').trim(),
     last_name: (req.body.last_name || '').trim(),
-    email: (req.body.email || '').trim().toLowerCase()
+    email: (req.body.email || '').trim().toLowerCase(),
+    /* ----- Saul Sprint 2: preserve account type and list selections ----- */
+    signup_role: logic.pickSignupRoleFromBody(req.body),
+    selectedListIds: logic.subscriberListService.parseListIdsFromBody(req.body)
+    /* ----- end Saul Sprint 2 ----- */
   };
   try {
     const { first_name } = await logic.signup(req.body);
@@ -172,7 +202,8 @@ app.post('/signup', async (req, res, next) => {
   } catch (error) {
     if (error instanceof AuthError) {
       res.locals.messages.error = [error.message];
-      return res.render('signup', { title: 'Create Account', form });
+      const subscriberLists = await logic.subscriberListService.getCampusLists();
+      return res.render('signup', { title: 'Create Account', form, subscriberLists });
     }
     next(error);
   }
@@ -221,6 +252,73 @@ app.post('/login', async (req, res, next) => {
 app.post('/logout', (req, res) => {
   req.session.destroy(() => res.redirect('/'));
 });
+
+/* ----- Saul Sprint 2: profile routes ----- */
+app.get('/profile', async (req, res, next) => {
+  if (!req.currentUser) return res.redirect('/login');
+  try {
+    const profile = await logic.getProfileData(req.currentUser);
+    res.render('profile', {
+      title: 'Profile',
+      profile
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.post('/profile/subscriptions', async (req, res) => {
+  if (!req.currentUser) return res.redirect('/login');
+  const role = String(req.currentUser.role || '').trim().toLowerCase();
+  if (role !== 'subscriber') {
+    req.flash('error', 'Only students can manage list subscriptions.');
+    return res.redirect('/profile');
+  }
+
+  const listIds = logic.subscriberListService.parseListIdsFromBody(req.body);
+  try {
+    await logic.updateStudentSubscriptions(req.currentUser.id, listIds);
+    req.flash('success', 'Your subscriptions were updated.');
+  } catch (error) {
+    req.flash('error', error.message || 'Could not update subscriptions.');
+  }
+  return res.redirect('/profile');
+});
+
+app.post('/profile/lists', async (req, res) => {
+  if (!req.currentUser) return res.redirect('/login');
+  if (!logic.canUserSendNotifications(req.currentUser)) {
+    req.flash('error', 'Only managers can create subscriber lists.');
+    return res.redirect('/profile');
+  }
+
+  const listName = (req.body.list_name || '').trim();
+  try {
+    await logic.createManagerSubscriberList(listName, req.currentUser.id);
+    req.flash('success', `Subscriber list "${listName}" created.`);
+  } catch (error) {
+    req.flash('error', error.message || 'Could not create subscriber list.');
+  }
+  return res.redirect('/profile');
+});
+
+app.post('/profile/lists/delete', async (req, res) => {
+  if (!req.currentUser) return res.redirect('/login');
+  if (!logic.canUserSendNotifications(req.currentUser)) {
+    req.flash('error', 'Only managers can remove subscriber lists.');
+    return res.redirect('/profile');
+  }
+
+  const listId = req.body.list_id;
+  try {
+    const { name } = await logic.deleteManagerSubscriberList(listId);
+    req.flash('success', `Subscriber list "${name}" removed.`);
+  } catch (error) {
+    req.flash('error', error.message || 'Could not remove subscriber list.');
+  }
+  return res.redirect('/profile');
+});
+/* ----- end Saul Sprint 2 ----- */
 
 // -- 404 fallback
 // Has to be the last middleware. If nothing above matched, this

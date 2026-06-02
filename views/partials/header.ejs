@@ -13,18 +13,19 @@
       <span class="navbar-title">PCC Food Pantry</span>
     </a>
 
-    <div>
+    <div class="navbar-actions">
+      <div class="navbar-links">
       <% if (currentUser) { %>
         <% /* ----- Noah's code: role-based nav links ----- */ %>
         <% const _navRole = String(currentUser.role || '').trim().toLowerCase(); %>
         <% if (_navRole === 'manager') { %>
-          <a href="/sendNotification">Send Notification</a>&nbsp;&nbsp;
-          <a href="/notifications/log">Notification Log</a>&nbsp;&nbsp;&nbsp;
+          <a href="/sendNotification">Send Notification</a>
+          <a href="/notifications/log">Notification Log</a>
         <% } else if (_navRole === 'staff') { %>
-          <a href="/notifications/log">Notification Log</a>&nbsp;&nbsp;&nbsp;
+          <a href="/notifications/log">Notification Log</a>
         <% } %>
         <% /* ----- end Noah's code ----- */ %>
-        <span>Hello, <%= currentUser.first_name %>!&nbsp;&nbsp;&nbsp;</span>
+        <span class="navbar-greeting">Hello, <%= currentUser.first_name %>!</span>
         <form method="POST" action="/logout" class="inline-form">
           <button type="submit" class="btn-link">Logout</button>
         </form>
@@ -37,6 +38,18 @@
         <% } %>
         <% /* ----- end Saul's code ----- */ %>
       <% } %>
+      </div>
+
+      <% /* ----- Saul Sprint 2: profile icon on the far right ----- */ %>
+      <% if (currentUser) { %>
+      <a href="/profile" class="profile-icon-link" title="Profile" aria-label="Profile">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      </a>
+      <% } %>
+      <% /* ----- end Saul Sprint 2 ----- */ %>
     </div>
   </div>
 

@@ -18,6 +18,9 @@ const User = require('../models/User');
 /* ----- Saul's code: email transport for Send Notification ----- */
 const { sendNotificationEmail } = require('./mail');
 /* ----- end Saul's code ----- */
+/* ----- Saul Sprint 2: subscriber list service ----- */
+const subscriberListService = require('./subscriberListService');
+/* ----- end Saul Sprint 2 ----- */
 
 
 /** Encryption factor for bcrypt. Higher = slower = harder to brute-force. 12
@@ -201,6 +204,17 @@ async function signup(body) {
           'Remove or fix triggers/defaults on users.role, or widen CHECK constraints.'
         );
       }
+
+      /* ----- Saul Sprint 2: subscribe students to selected lists at signup ----- */
+      if (user.role === ROLE_SUBSCRIBER) {
+        const listIds = subscriberListService.parseListIdsFromBody(body);
+        if (!listIds.length) {
+          throw new AuthError('Select at least one subscriber list.');
+        }
+        await subscriberListService.updateUserSubscriptions(user.id, listIds, t);
+      }
+      /* ----- end Saul Sprint 2 ----- */
+
       return { userId: user.id, first_name: user.first_name };
     });
   } catch (err) {
@@ -266,26 +280,24 @@ async function getCurrentUser(userId) {
 
 /* ----- Saul's code: mass notification (SMTP + DB log) ----- */
 /**
- * Send one broadcast notification to every user whose role appears in
- * config app notification roles.
+ * Send one broadcast notification to subscribers on the selected lists.
  *
- * @param {object} opts  { subject, body, senderName, senderEmail }.
+ * @param {object} opts  { subject, body, senderName, senderEmail, listIds }.
  * @returns {Promise<void>}
  */
-async function sendBroadcastNotification({ subject, body, senderName, senderEmail }) {
-  const roleNames = config.app.notificationRoles;
+async function sendBroadcastNotification({ subject, body, senderName, senderEmail, listIds }) {
+  /* ----- Saul Sprint 2: resolve recipients from selected subscriber lists ----- */
+  const selectedListIds = Array.isArray(listIds) ? listIds : [];
+  if (!selectedListIds.length) {
+    throw new AuthError('Select at least one subscriber list.');
+  }
 
-  const recipients = await UserModel.findAll({
-    where: {
-      role: { [Op.in]: roleNames },
-      email: { [Op.and]: [{ [Op.ne]: null }, { [Op.ne]: '' }] }
-    },
-    attributes: ['id', 'email']
-  });
+  const recipients = await subscriberListService.getSubscribersForLists(selectedListIds);
+  /* ----- end Saul Sprint 2 ----- */
 
   if (!recipients.length) {
     throw new AuthError(
-      'No recipients found. Add users with a matching role (see NOTIFICATION_ROLES in .env).'
+      'No recipients found on the selected lists. Students must subscribe to a list first.'
     );
   }
 
@@ -317,6 +329,59 @@ async function sendBroadcastNotification({ subject, body, senderName, senderEmai
 }
 /* ----- end Saul's code ----- */
 
+/* ----- Saul Sprint 2: profile and list management ----- */
+/**
+ * Load profile data for the current user (subscriptions or list admin).
+ * @param {{id:number, role:string}} user
+ * @returns {Promise<object>}
+ */
+async function getProfileData(user) {
+  const role = String(user.role || '').trim().toLowerCase();
+
+  if (role === ROLE_SUBSCRIBER) {
+    const subscriberLists = await subscriberListService.getCampusLists();
+    const subscribedListIds = await subscriberListService.getUserListIds(user.id);
+    return { subscriberLists, subscribedListIds, isManagerProfile: false };
+  }
+
+  if (role === ROLE_MANAGER) {
+    const subscriberLists = await subscriberListService.getAllLists();
+    return { subscriberLists, subscribedListIds: [], isManagerProfile: true };
+  }
+
+  return { subscriberLists: [], subscribedListIds: [], isManagerProfile: false };
+}
+
+/**
+ * Update a student's list subscriptions from the profile page.
+ * @param {number} userId
+ * @param {number[]} listIds
+ * @returns {Promise<void>}
+ */
+async function updateStudentSubscriptions(userId, listIds) {
+  await subscriberListService.updateUserSubscriptions(userId, listIds);
+}
+
+/**
+ * Manager creates a new subscriber list from the profile page.
+ * @param {string} name
+ * @param {number} managerUserId
+ * @returns {Promise<{id:number, name:string}>}
+ */
+async function createManagerSubscriberList(name, managerUserId) {
+  return subscriberListService.createSubscriberList(name, managerUserId);
+}
+
+/**
+ * Manager removes a subscriber list from the profile page (Saul Sprint 2).
+ * @param {number} listId
+ * @returns {Promise<{name:string}>}
+ */
+async function deleteManagerSubscriberList(listId) {
+  return subscriberListService.deleteSubscriberList(listId);
+}
+/* ----- end Saul Sprint 2 ----- */
+
 module.exports = {
   AuthError,
   signup,
@@ -327,6 +392,13 @@ module.exports = {
   pickSignupRoleFromBody,
   /* ----- Saul's code ----- */
   mayAccessSendNotification,
-  resolveBroadcastSender
+  resolveBroadcastSender,
   /* ----- end Saul's code ----- */
+  /* ----- Saul Sprint 2 ----- */
+  getProfileData,
+  updateStudentSubscriptions,
+  createManagerSubscriberList,
+  deleteManagerSubscriberList,
+  subscriberListService
+  /* ----- end Saul Sprint 2 ----- */
 };

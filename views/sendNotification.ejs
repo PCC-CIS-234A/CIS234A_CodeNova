@@ -17,6 +17,30 @@
   <% /* ----- end Saul's code ----- */ %>
 
   <form id="send-notification-form" method="POST" action="/sendNotification">
+    <% /* ----- Saul Sprint 2: select one or more subscriber lists ----- */ %>
+    <div class="form-group">
+      <fieldset class="choice-group">
+        <legend class="form-label">Send to subscriber lists</legend>
+        <% const selectedIds = (notificationForm.selectedListIds || []).map(function(id) { return String(id); }); %>
+        <% if (typeof subscriberLists !== 'undefined' && subscriberLists && subscriberLists.length) { %>
+          <% subscriberLists.forEach(function(list) { %>
+          <label class="choice-option">
+            <input
+              type="checkbox"
+              name="list_ids"
+              value="<%= list.id %>"
+              <%= selectedIds.includes(String(list.id)) ? 'checked' : '' %>
+            />
+            <span><%= list.name %></span>
+          </label>
+          <% }); %>
+        <% } else { %>
+          <p class="profile-empty">No subscriber lists are available yet.</p>
+        <% } %>
+      </fieldset>
+    </div>
+    <% /* ----- end Saul Sprint 2 ----- */ %>
+
     <div class="form-group">
       <label class="form-label" for="subject">Subject</label>
       <input

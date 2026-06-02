@@ -8,6 +8,8 @@
     UserModel              -> users
     Notification           -> notifications
     NotificationRecipient  -> notification_recipient (junction)
+    SubscriberList         -> subscriber_lists (Saul Sprint 2)
+    UserSubscriberList     -> user_list (Saul Sprint 2)
 
   The logic layer imports these models (plus the sequelize instance,
   for transactions) and does its work through them. All parameter
@@ -131,6 +133,46 @@ NotificationRecipient.init(
   { sequelize, modelName: 'NotificationRecipient', tableName: 'notification_recipient' }
 );
 
+/* ----- Saul Sprint 2: subscriber list models ----- */
+/**
+ * A named subscriber list (campus or manager-created). Managers can add
+ * new lists. students subscribe to one or more lists.
+ */
+class SubscriberList extends Model {}
+
+SubscriberList.init(
+  {
+    id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
+    name: { type: DataTypes.STRING(100), allowNull: false, unique: true }
+  },
+  { sequelize, modelName: 'SubscriberList', tableName: 'subscriber_lists' }
+);
+
+/**
+ * Junction connecting students (subscribers) to the lists they belong to.
+ * Maps to the existing dbo.user_list table.
+ */
+class UserSubscriberList extends Model {}
+
+UserSubscriberList.init(
+  {
+    list_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      references: { model: 'subscriber_lists', key: 'id' }
+    },
+    user_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      primaryKey: true,
+      references: { model: 'users', key: 'id' }
+    }
+  },
+  { sequelize, modelName: 'UserSubscriberList', tableName: 'user_list' }
+);
+/* ----- end Saul Sprint 2 ----- */
+
 // -- Associations
 // Many-to-many in both directions, going through the junction table.
 // `as` lets the logic layer reach for notification.recipients or
@@ -148,6 +190,21 @@ UserModel.belongsToMany(Notification, {
   otherKey: 'notification_id',
   as: 'received_notifications'
 });
+
+/* ----- Saul Sprint 2: subscriber list associations ----- */
+UserModel.belongsToMany(SubscriberList, {
+  through: UserSubscriberList,
+  foreignKey: 'user_id',
+  otherKey: 'list_id',
+  as: 'subscriber_lists'
+});
+SubscriberList.belongsToMany(UserModel, {
+  through: UserSubscriberList,
+  foreignKey: 'list_id',
+  otherKey: 'user_id',
+  as: 'subscribers'
+});
+/* ----- end Saul Sprint 2 ----- */
 
 // -- Initialization
 
@@ -168,5 +225,7 @@ module.exports = {
   UserModel,
   Notification,
   NotificationRecipient,
+  SubscriberList,
+  UserSubscriberList,
   initialize
 };

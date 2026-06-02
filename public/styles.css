@@ -42,6 +42,182 @@ body {
   font-weight: bold;
 }
 
+/* ----- Saul Sprint 2: navbar layout and profile icon ----- */
+.navbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.navbar-links {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.navbar-links a {
+  margin-left: 0;
+}
+
+.navbar-greeting {
+  margin-left: 8px;
+  font-weight: bold;
+}
+
+.profile-icon-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.15);
+  margin-left: 0;
+  flex-shrink: 0;
+}
+
+.profile-icon-link:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.choice-group {
+  border: 1px solid #ccd3e0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  margin: 0;
+}
+
+.choice-group .form-label,
+.choice-group legend.form-label {
+  margin-bottom: 10px;
+}
+
+.choice-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.choice-option:last-child {
+  margin-bottom: 0;
+}
+
+.choice-option input {
+  margin: 0;
+  flex-shrink: 0;
+}
+
+.campus-list-section.is-hidden {
+  display: none;
+}
+
+.profile-summary {
+  background: #f4f7fb;
+  border: 1px solid #dde3ed;
+  border-radius: 10px;
+  padding: 16px 18px;
+  margin-bottom: 20px;
+}
+
+.profile-summary p {
+  margin: 6px 0;
+}
+
+.profile-section {
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid #e8ecf2;
+}
+
+.profile-section h2 {
+  margin-top: 0;
+  color: #008EAA;
+  font-size: 20px;
+}
+
+.profile-subheading {
+  margin-top: 20px;
+  margin-bottom: 10px;
+  color: #333;
+  font-size: 16px;
+}
+
+.profile-help {
+  color: #555;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.profile-empty {
+  color: #777;
+  font-size: 14px;
+}
+
+.profile-list-names {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #333;
+}
+
+.profile-list-names li {
+  margin-bottom: 0;
+}
+
+.profile-list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid #dde3ed;
+}
+
+.profile-list-row:last-child {
+  border-bottom: none;
+}
+
+.profile-remove-list-form {
+  flex-shrink: 0;
+}
+
+.profile-remove-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  color: #c62828;
+  font-size: 14px;
+  font-weight: bold;
+  margin-left: 0;
+  text-decoration: none;
+}
+
+.profile-remove-btn:hover {
+  color: #8e0000;
+  text-decoration: underline;
+}
+
+.profile-create-list-form {
+  margin-bottom: 8px;
+}
+
+.form-inline-error {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #a12626;
+}
+
+.form-inline-error.is-hidden {
+  display: none;
+}
+/* ----- end Saul Sprint 2 ----- */
+
 /* Creates the main page area that centers content on the screen */
 .page {
   min-height: calc(100vh - 60px);

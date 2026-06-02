@@ -58,6 +58,41 @@
       />
     </div>
 
+    <% /* ----- Saul Sprint 2: account type dropdown and multi-select list checkboxes ----- */ %>
+    <% const selectedSignupRole = (form && form.signup_role) ? form.signup_role : 'student'; %>
+    <div class="form-group">
+      <label for="signup-role" class="form-label">Account type</label>
+      <select id="signup-role" name="signup_role" class="form-input">
+        <option value="student" <%= selectedSignupRole === 'student' ? 'selected' : '' %>>Student (Subscriber)</option>
+        <option value="manager" <%= selectedSignupRole === 'manager' ? 'selected' : '' %>>Manager</option>
+        <option value="staff" <%= selectedSignupRole === 'staff' ? 'selected' : '' %>>Staff</option>
+      </select>
+    </div>
+
+    <div id="campus-list-section" class="form-group campus-list-section<%= selectedSignupRole === 'student' ? '' : ' is-hidden' %>">
+      <fieldset class="choice-group">
+        <legend class="form-label">Subscriber lists (select one or more)</legend>
+        <% const selectedListIds = (form && form.selectedListIds) ? form.selectedListIds.map(String) : []; %>
+        <% if (typeof subscriberLists !== 'undefined' && subscriberLists && subscriberLists.length) { %>
+          <% subscriberLists.forEach(function(list) { %>
+          <label class="choice-option">
+            <input
+              type="checkbox"
+              name="list_ids"
+              value="<%= list.id %>"
+              <%= selectedListIds.includes(String(list.id)) ? 'checked' : '' %>
+            />
+            <span><%= list.name %></span>
+          </label>
+          <% }); %>
+        <% } else { %>
+          <p class="profile-empty">No subscriber lists are available yet.</p>
+        <% } %>
+      </fieldset>
+      <p id="signup-list-error" class="form-inline-error is-hidden" role="alert">Select at least one subscriber list.</p>
+    </div>
+    <% /* ----- end Saul Sprint 2 ----- */ %>
+
     <div class="form-group">
       <label for="signup-password" class="form-label">Password</label>
       <div class="password-wrapper">
@@ -98,4 +133,5 @@
 </div>
 
 <script src="/password-toggle.js"></script>
+<script src="/signup-role.js"></script>
 <%- include('partials/footer') %>
