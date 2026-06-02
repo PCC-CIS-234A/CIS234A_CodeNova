@@ -5,7 +5,7 @@
   This is the representation of a user in our app.
   It holds the fields a user has and checks them for validity.
 
-  Typical flow: the logic layer builds one of these from a signup form,
+  The logic layer builds one of these from a signup form,
   runs validate(), and then hands toPersistence() off to the data layer
   to actually save the row. On the way back out we wrap loaded rows in a
   User and call toPublic() to get a safe, display-ready object.
@@ -37,7 +37,7 @@ class User {
    * standard format when we compare or store them later.
    *
    * @param {object} [fields]
-   * @param {number} [fields.id]             Database id once the row has been saved. Null for a brand-new user.
+   * @param {number} [fields.id]             Database id once the row has been saved
    * @param {string} [fields.username]
    * @param {string} [fields.first_name]
    * @param {string} [fields.last_name]

@@ -361,10 +361,9 @@ async function updateAccount(userId, body) {
  * Permanently delete the current user's account row. Requires the user
  * to re-supply their password as a second authentication check.
  *
- * The notifications the user received stay in the notifications table
- * (broadcast audit log), but the user's rows in notification_recipient
- * and user_list have to be cleared first (Those FKs have no
- * ON DELETE CASCADE, so leaving them in place would make the users row
+ * The notifications the user received stay in the notifications table,
+ * but the user's rows in notification_recipient and user_list have to
+ * be cleared first, as leaving them in place would make the users row
  * undeletable.
  *
  * @param {number} userId    The id of the user being deleted.
@@ -377,9 +376,8 @@ async function deleteAccount(userId, password) {
     throw new AuthError('Account not found.');
   }
   // Make them prove account ownership one more time. A logged-in session
-  // alone isn't enough for something this destructive -- if a browser is
-  // left open, or a cookie is hijacked, the password check is the last
-  // line of defense.
+  // alone isn't enough to delete an account. If a browser is left open,
+  // or a cookie is hijacked, the password check is the last line of defense.
   const supplied = password || '';
   if (!supplied) {
     throw new AuthError('Enter your password to confirm.');

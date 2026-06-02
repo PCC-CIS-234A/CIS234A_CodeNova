@@ -17,7 +17,7 @@ Architecture:
   application/   - HTTP routes, view rendering            (top tier)
   logic/         - validation, hashing, workflows         (middle tier)
   data/          - Sequelize models and DB connection     (bottom tier)
-  models/        - plain domain classes (User, ...)       (shared)
+  models/        - classes
 
 This file is the entry point. Its only jobs are: load env vars,
 prove the database is reachable, and start the HTTP server. Anything
