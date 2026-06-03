@@ -1,0 +1,95 @@
+<% /*
+  ----- Saul Sprint 2: subscriberListPicker.ejs -----
+  Reusable checkbox list with search, sort, and show more.
+  Used on signup, profile, and manager remove lists.
+
+  You can pass in: pickerId, lists, selectedIds, layout, legend,
+  inputName, checkboxClass, staticEntries, expandOnly
+*/ %>
+<% /* set up default values if the page did not pass them in */ %>
+<% const _pickerId = (typeof pickerId !== 'undefined' && pickerId) ? pickerId : 'list-picker'; %>
+<% const _lists = (typeof lists !== 'undefined' && lists) ? lists : []; %>
+<% const _selected = ((typeof selectedIds !== 'undefined' && selectedIds) ? selectedIds : []).map(String); %>
+<% const _layout = (typeof layout !== 'undefined' && layout === 'inline') ? 'inline' : 'stack'; %>
+<% const _inputName = (typeof inputName !== 'undefined' && inputName) ? inputName : 'list_ids'; %>
+<% const _checkboxClass = (typeof checkboxClass !== 'undefined' && checkboxClass) ? checkboxClass : ''; %>
+<% const _staticEntries = (typeof staticEntries !== 'undefined' && staticEntries) ? staticEntries : []; %>
+<% const _legend = (typeof legend !== 'undefined' && legend) ? legend : ''; %>
+<% const _expandOnly = typeof expandOnly !== 'undefined' && expandOnly; %>
+<% const _itemsClass = _layout === 'inline' ? 'choice-group-inline list-picker-items' : 'choice-group list-picker-items list-picker-items-stack'; %>
+
+<div
+  class="subscriber-list-picker<%= _expandOnly ? ' subscriber-list-picker-expand-only' : '' %>"
+  id="<%= _pickerId %>"
+  data-collapsed-limit="3"
+>
+  <% if (_lists.length || _staticEntries.length) { %>
+  <% if (!_expandOnly) { %>
+  <% /* search box and sort dropdown (hidden on signup expand-only mode) */ %>
+  <div class="list-picker-toolbar">
+    <div class="list-picker-toolbar-field">
+      <label class="form-label" for="<%= _pickerId %>-search">Search</label>
+      <input
+        type="search"
+        id="<%= _pickerId %>-search"
+        class="form-input list-picker-search"
+        placeholder="Search lists..."
+        autocomplete="off"
+      />
+    </div>
+    <div class="list-picker-toolbar-field list-picker-toolbar-field-narrow">
+      <label class="form-label" for="<%= _pickerId %>-sort">Sort</label>
+      <select id="<%= _pickerId %>-sort" class="form-input list-picker-sort">
+        <option value="newest" selected>Newest first</option>
+        <option value="oldest">Oldest first</option>
+      </select>
+    </div>
+  </div>
+  <% } %>
+
+  <p class="list-picker-summary" aria-live="polite"></p>
+
+  <% /* each list is a checkbox; staticEntries are labels only (no checkbox) */ %>
+  <fieldset class="<%= _itemsClass %>">
+    <% if (_legend) { %>
+    <legend class="form-label"><%= _legend %></legend>
+    <% } %>
+    <% _lists.forEach(function(list) { %>
+    <% /* one checkbox per list — name goes to the server as list_ids */ %>
+    <label
+      class="choice-option list-picker-item<%= _layout === 'inline' ? ' choice-option-inline' : '' %>"
+      data-list-id="<%= list.id %>"
+      data-list-name="<%= list.name %>"
+    >
+      <input
+        type="checkbox"
+        name="<%= _inputName %>"
+        value="<%= list.id %>"
+        class="list-picker-checkbox<%= _checkboxClass ? ' ' + _checkboxClass : '' %>"
+        <%= _selected.includes(String(list.id)) ? 'checked' : '' %>
+      />
+      <span><%= list.name %></span>
+    </label>
+    <% }); %>
+    <% /* static labels (like All Subscribers) — no checkbox, cannot be removed */ %>
+    <% _staticEntries.forEach(function(entry) { %>
+    <span
+      class="choice-option-static list-picker-item list-picker-item-static<%= _layout === 'inline' ? ' choice-option-inline' : '' %>"
+      data-list-name="<%= entry.name %>"
+    ><%= entry.name %></span>
+    <% }); %>
+  </fieldset>
+
+  <p class="list-picker-empty is-hidden">No lists match your search.</p>
+
+  <div class="list-picker-expand-row">
+    <% /* show more button — JS hides it when there are 3 or fewer lists */ %>
+    <button type="button" class="btn btn-compact btn-secondary list-picker-expand is-hidden">
+      Show more
+    </button>
+  </div>
+  <% } else { %>
+  <p class="profile-empty">No subscriber lists are available yet.</p>
+  <% } %>
+</div>
+<% /* ----- end Saul Sprint 2 ----- */ %>

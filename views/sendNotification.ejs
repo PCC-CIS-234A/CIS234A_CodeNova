@@ -17,12 +17,14 @@
   <% /* ----- end Saul's code ----- */ %>
 
   <form id="send-notification-form" method="POST" action="/sendNotification">
-    <% /* ----- Saul Sprint 2: select one or more subscriber lists ----- */ %>
+    <% /* ----- Saul Sprint 2: manager picks which lists get this email ----- */ %>
     <div class="form-group">
       <fieldset class="choice-group">
         <legend class="form-label">Send to subscriber lists</legend>
+        <% /* which boxes were checked if the form failed */ %>
         <% const selectedIds = (notificationForm.selectedListIds || []).map(function(id) { return String(id); }); %>
         <% if (typeof subscriberLists !== 'undefined' && subscriberLists && subscriberLists.length) { %>
+          <% /* one checkbox per list from the database */ %>
           <% subscriberLists.forEach(function(list) { %>
           <label class="choice-option">
             <input
@@ -41,8 +43,7 @@
     </div>
     <% /* ----- end Saul Sprint 2 ----- */ %>
 
-    <div class="form-group">
-      <label class="form-label" for="subject">Subject</label>
+    <div class="form-group">      <label class="form-label" for="subject">Subject</label>
       <input
         type="text"
         id="subject"

@@ -1,6 +1,5 @@
-<% /* Saul Sprint 2 — profile page (student subscriptions + manager list admin) */ %>
+<% /* ----- Saul Sprint 2: profile page (lists for students and managers) ----- */ %>
 <%- include('partials/header', { title }) %>
-
 <div class="card card-wide">
   <h1>Profile</h1>
 
@@ -14,45 +13,34 @@
 
   <% const _profileRole = String(currentUser.role || '').trim().toLowerCase(); %>
 
-  <% /* ----- Saul Sprint 2: student subscription management ----- */ %>
+  <% /* ----- Saul Sprint 2: student picks which lists get emails ----- */ %>
   <% if (_profileRole === 'subscriber') { %>
   <section class="profile-section">
     <h2>My Subscriptions</h2>
     <p class="profile-help">Choose one or more lists to receive pantry notifications from. Manager-created lists appear here too. Uncheck a box to unsubscribe.</p>
 
+    <% /* form posts checked list_ids to /profile/subscriptions */ %>
     <form method="POST" action="/profile/subscriptions">
-      <% if (profile.subscriberLists && profile.subscriberLists.length) { %>
-      <fieldset class="choice-group">
-        <legend class="form-label">Subscriber lists (select one or more)</legend>
-        <% profile.subscriberLists.forEach(function(list) { %>
-        <% const isChecked = (profile.subscribedListIds || []).includes(list.id); %>
-        <label class="choice-option">
-          <input
-            type="checkbox"
-            name="list_ids"
-            value="<%= list.id %>"
-            <%= isChecked ? 'checked' : '' %>
-          />
-          <span><%= list.name %></span>
-        </label>
-        <% }); %>
-      </fieldset>
-      <% } else { %>
-      <p class="profile-empty">No subscriber lists are available yet.</p>
-      <% } %>
+      <%- include('partials/subscriberListPicker', {
+        pickerId: 'profile-subscription-picker',
+        lists: profile.subscriberLists || [],
+        selectedIds: profile.subscribedListIds || [],
+        layout: 'stack',
+        legend: 'Subscriber lists (select one or more)'
+      }) %>
 
-      <button type="submit" class="btn">Save Subscriptions</button>
+      <button type="submit" class="btn profile-form-submit">Save Subscriptions</button>
     </form>
   </section>
   <% } %>
-  <% /* ----- end Saul Sprint 2 ----- */ %>
 
-  <% /* ----- Saul Sprint 2: manager list creation ----- */ %>
+  <% /* ----- Saul Sprint 2: manager creates and removes lists ----- */ %>
   <% if (profile.isManagerProfile) { %>
   <section class="profile-section">
     <h2>Manage Subscriber Lists</h2>
     <p class="profile-help">Create new lists for students to subscribe to during account creation and on their profile page.</p>
 
+    <% /* type a name and post to /profile/lists */ %>
     <form method="POST" action="/profile/lists" class="profile-create-list-form">
       <div class="form-group">
         <label for="list-name" class="form-label">New list name</label>
@@ -71,33 +59,40 @@
 
     <% if (profile.subscriberLists && profile.subscriberLists.length) { %>
     <h3 class="profile-subheading">Existing lists</h3>
-    <ul class="profile-list-names">
-      <% profile.subscriberLists.forEach(function(list) { %>
-      <li class="profile-list-row">
-        <span><%= list.name %></span>
-        <% if (list.name !== 'All Subscribers') { %>
-        <form method="POST" action="/profile/lists/delete" class="inline-form profile-remove-list-form">
-          <input type="hidden" name="list_id" value="<%= list.id %>" />
-          <button
-            type="submit"
-            class="profile-remove-btn"
-            onclick="return confirm('Remove &quot;<%= list.name %>&quot;? Students subscribed to this list will be unsubscribed.');"
-          >
-            Remove
-          </button>
-        </form>
-        <% } %>
-      </li>
-      <% }); %>
-    </ul>
+    <p class="profile-help">Select one or more lists below, then choose Remove Selected. All Subscribers cannot be removed.</p>
+
+    <% /* check lists to delete, then post to /profile/lists/delete */ %>
+    <form method="POST" action="/profile/lists/delete" id="manager-remove-lists-form">
+      <% /* All Subscribers shows as a label only — not in the delete list */ %>
+      <% const managerRemovableLists = (profile.subscriberLists || []).filter(function(list) {
+        return list.name !== 'All Subscribers';
+      }); %>
+      <%- include('partials/subscriberListPicker', {
+        pickerId: 'manager-remove-picker',
+        lists: managerRemovableLists,
+        selectedIds: [],
+        layout: 'inline',
+        legend: 'Subscriber lists',
+        checkboxClass: 'manager-list-remove-cb',
+        staticEntries: [{ name: 'All Subscribers' }]
+      }) %>
+
+      <button
+        type="submit"
+        id="remove-selected-lists-btn"
+        class="btn profile-remove-selected-btn profile-form-submit is-hidden"
+      >
+        Remove Selected
+      </button>
+    </form>
     <% } %>
   </section>
   <% } %>
   <% /* ----- end Saul Sprint 2 ----- */ %>
-
-  <div class="form-secondary-actions">
-    <a href="/" class="btn btn-compact btn-secondary btn-link-action">Back to Home</a>
-  </div>
 </div>
+<% /* load list picker JS for search, sort, show more, remove button */ %>
+<% if (profile.isManagerProfile || _profileRole === 'subscriber') { %>
+<script src="/subscriber-list-picker.js"></script>
+<% } %>
 
 <%- include('partials/footer') %>

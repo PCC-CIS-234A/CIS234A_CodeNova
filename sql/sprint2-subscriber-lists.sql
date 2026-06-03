@@ -1,13 +1,10 @@
-/*
-  Saul Sprint 2 — NOTE: tables already exist in CIS234A_CodeNova.
-
-  Do NOT run this script unless your database is missing them.
-
-  Existing schema (confirmed in SSMS):
-    dbo.subscriber_lists  (id, name)
-    dbo.user_list         (list_id, user_id)
-
-  Pre-populated lists:
-    All Subscribers, Rock Creek Campus, Sylvania Campus,
-    Southeast Campus, Cascade Campus
-*/
+/*
+  ----- Saul Sprint 2: sprint2-subscriber-lists.sql -----
+  NOTE: These tables already exist in the class database.
+  You do NOT need to run this file unless tables are missing.
+
+  subscriber_lists = list names (campuses, All Subscribers, etc.)
+  user_list        = which student joined which list
+  ----- end Saul Sprint 2 -----
+*/
+

@@ -95,10 +95,11 @@ app.get('/sendNotification', async (req, res, next) => {
     return res.redirect('/');
   }
   try {
-    /* ----- Saul Sprint 2: load subscriber lists for multi-list send ----- */
+    /* ----- Saul Sprint 2: send notification list checkboxes ----- */
+    // get every list name from the database for the checkbox area
     const subscriberLists = await logic.subscriberListService.getAllLists();
+    // show the send form with an empty subject/body and the list checkboxes
     res.render('sendNotification', { title: 'Send Notification', form: {}, subscriberLists });
-    /* ----- end Saul Sprint 2 ----- */
   } catch (error) {
     next(error);
   }
@@ -113,17 +114,20 @@ app.post('/sendNotification', async (req, res) => {
 
   const subject = (req.body.subject || '').trim();
   const body = (req.body.body || '').trim();
-  /* ----- Saul Sprint 2: preserve selected list ids on validation errors ----- */
-  const selectedListIds = logic.subscriberListService.parseListIdsFromBody(req.body);
-  const form = { subject, body, selectedListIds };
-  /* ----- end Saul Sprint 2 ----- */
 
+  // read which list checkboxes were checked on the form
+  const selectedListIds = logic.subscriberListService.parseListIdsFromBody(req.body);
+  // keep subject, body, and list picks if we have to show the form again
+  const form = { subject, body, selectedListIds };
+
+  // subject and message body are required
   if (!subject || !body) {
     res.locals.messages.error = ['Subject and message body are required.'];
     const subscriberLists = await logic.subscriberListService.getAllLists();
     return res.render('sendNotification', { title: 'Send Notification', form, subscriberLists });
   }
 
+  // manager must pick at least one list to send to
   if (!selectedListIds.length) {
     res.locals.messages.error = ['Select at least one subscriber list.'];
     const subscriberLists = await logic.subscriberListService.getAllLists();
@@ -132,6 +136,7 @@ app.post('/sendNotification', async (req, res) => {
 
   try {
     const { senderName, senderEmail } = logic.resolveBroadcastSender(req);
+    // email only students on the lists that were checked
     await logic.sendBroadcastNotification({
       subject,
       body,
@@ -142,11 +147,14 @@ app.post('/sendNotification', async (req, res) => {
     req.flash('success', 'Notification email sent.');
     return res.redirect('/sendNotification');
   } catch (error) {
+    // show error and put their typed data back on the form
     res.locals.messages.error = [error.message || 'Could not send notification email.'];
     const subscriberLists = await logic.subscriberListService.getAllLists();
     return res.render('sendNotification', { title: 'Send Notification', form, subscriberLists });
   }
 });
+
+/* ----- end Saul Sprint 2 ----- */
 
 app.get('/dev-bypass', (req, res) => {
   if (!config.app.devBypassNotifications) {
@@ -161,16 +169,17 @@ app.get('/dev-bypass', (req, res) => {
 app.use('/notifications', notificationRoutes);
 /* ----- end Maeve's code ----- */
 
-// ---- Signup
+// ---- SIGNUP
 
 /** Render the signup form. If they're already logged in, send them home. */
 app.get('/signup', async (req, res, next) => {
   if (req.currentUser) return res.redirect('/');
   try {
-    /* ----- Saul Sprint 2: pass subscriber lists for student campus radios ----- */
+    /* ----- Saul Sprint 2: signup list checkboxes ----- */
+    // load campus lists (not All Subscribers) for student checkboxes
     const subscriberLists = await logic.subscriberListService.getCampusLists();
+    // show signup form with empty fields and the list picker
     res.render('signup', { title: 'Create Account', form: {}, subscriberLists });
-    /* ----- end Saul Sprint 2 ----- */
   } catch (error) {
     next(error);
   }
@@ -187,10 +196,10 @@ app.post('/signup', async (req, res, next) => {
     first_name: (req.body.first_name || '').trim(),
     last_name: (req.body.last_name || '').trim(),
     email: (req.body.email || '').trim().toLowerCase(),
-    /* ----- Saul Sprint 2: preserve account type and list selections ----- */
+
+    // remember account type and checked lists if signup fails
     signup_role: logic.pickSignupRoleFromBody(req.body),
     selectedListIds: logic.subscriberListService.parseListIdsFromBody(req.body)
-    /* ----- end Saul Sprint 2 ----- */
   };
   try {
     const { first_name } = await logic.signup(req.body);
@@ -202,12 +211,15 @@ app.post('/signup', async (req, res, next) => {
   } catch (error) {
     if (error instanceof AuthError) {
       res.locals.messages.error = [error.message];
+      // reload lists so checkboxes still show after a validation error
       const subscriberLists = await logic.subscriberListService.getCampusLists();
       return res.render('signup', { title: 'Create Account', form, subscriberLists });
     }
     next(error);
   }
 });
+
+/* ----- end Saul Sprint 2 ----- */
 
 /** Confirmation page shown after a successful signup. */
 app.get('/signup/success', (req, res) => {
@@ -254,9 +266,13 @@ app.post('/logout', (req, res) => {
 });
 
 /* ----- Saul Sprint 2: profile routes ----- */
+
+// Show profile page (student subscriptions or manager list tools)
 app.get('/profile', async (req, res, next) => {
+  // must be logged in to see profile
   if (!req.currentUser) return res.redirect('/login');
   try {
+    // load lists and which ones this student already joined
     const profile = await logic.getProfileData(req.currentUser);
     res.render('profile', {
       title: 'Profile',
@@ -267,16 +283,20 @@ app.get('/profile', async (req, res, next) => {
   }
 });
 
+// Student saves which lists they want on profile
 app.post('/profile/subscriptions', async (req, res) => {
   if (!req.currentUser) return res.redirect('/login');
   const role = String(req.currentUser.role || '').trim().toLowerCase();
+  // only students can change their list subscriptions
   if (role !== 'subscriber') {
     req.flash('error', 'Only students can manage list subscriptions.');
     return res.redirect('/profile');
   }
 
+  // read checked boxes from the form
   const listIds = logic.subscriberListService.parseListIdsFromBody(req.body);
   try {
+    // replace old picks in user_list with the new checked ones
     await logic.updateStudentSubscriptions(req.currentUser.id, listIds);
     req.flash('success', 'Your subscriptions were updated.');
   } catch (error) {
@@ -285,8 +305,10 @@ app.post('/profile/subscriptions', async (req, res) => {
   return res.redirect('/profile');
 });
 
+// Manager adds a new list name
 app.post('/profile/lists', async (req, res) => {
   if (!req.currentUser) return res.redirect('/login');
+  // only managers can create lists
   if (!logic.canUserSendNotifications(req.currentUser)) {
     req.flash('error', 'Only managers can create subscriber lists.');
     return res.redirect('/profile');
@@ -294,6 +316,7 @@ app.post('/profile/lists', async (req, res) => {
 
   const listName = (req.body.list_name || '').trim();
   try {
+    // add a new row to subscriber_lists
     await logic.createManagerSubscriberList(listName, req.currentUser.id);
     req.flash('success', `Subscriber list "${listName}" created.`);
   } catch (error) {
@@ -302,22 +325,32 @@ app.post('/profile/lists', async (req, res) => {
   return res.redirect('/profile');
 });
 
+// Manager removes checked lists
 app.post('/profile/lists/delete', async (req, res) => {
   if (!req.currentUser) return res.redirect('/login');
+  // only managers can delete lists
   if (!logic.canUserSendNotifications(req.currentUser)) {
     req.flash('error', 'Only managers can remove subscriber lists.');
     return res.redirect('/profile');
   }
 
-  const listId = req.body.list_id;
+  // read which list checkboxes were checked for removal
+  const listIds = logic.subscriberListService.parseListIdsFromBody(req.body);
   try {
-    const { name } = await logic.deleteManagerSubscriberList(listId);
-    req.flash('success', `Subscriber list "${name}" removed.`);
+    // delete lists and remove students from those lists in user_list
+    const { names, count } = await logic.deleteManagerSubscriberLists(listIds);
+    // show a message for one list or many lists
+    if (count === 1) {
+      req.flash('success', `Subscriber list "${names[0]}" removed.`);
+    } else {
+      req.flash('success', `${count} subscriber lists removed.`);
+    }
   } catch (error) {
     req.flash('error', error.message || 'Could not remove subscriber list.');
   }
   return res.redirect('/profile');
 });
+
 /* ----- end Saul Sprint 2 ----- */
 
 // -- 404 fallback

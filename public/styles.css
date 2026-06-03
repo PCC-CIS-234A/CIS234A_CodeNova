@@ -42,13 +42,16 @@ body {
   font-weight: bold;
 }
 
-/* ----- Saul Sprint 2: navbar layout and profile icon ----- */
+/* ----- Saul Sprint 2: styles for profile, list picker, menu icon ----- */
+
+/* profile icon on the right side of the menu bar */
 .navbar-actions {
   display: flex;
   align-items: center;
   gap: 16px;
 }
 
+/* menu links and profile icon sit in a row */
 .navbar-links {
   display: flex;
   align-items: center;
@@ -58,11 +61,6 @@ body {
 
 .navbar-links a {
   margin-left: 0;
-}
-
-.navbar-greeting {
-  margin-left: 8px;
-  font-weight: bold;
 }
 
 .profile-icon-link {
@@ -81,6 +79,7 @@ body {
   background: rgba(255, 255, 255, 0.3);
 }
 
+/* checkbox groups on signup, profile, and send notification */
 .choice-group {
   border: 1px solid #ccd3e0;
   border-radius: 8px;
@@ -111,10 +110,126 @@ body {
   flex-shrink: 0;
 }
 
-.campus-list-section.is-hidden {
+/* search, sort, and show more button for the list picker */
+.list-picker-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: flex-end;
+  margin-bottom: 10px;
+}
+
+.list-picker-toolbar-field {
+  flex: 1 1 180px;
+  min-width: 0;
+}
+
+.list-picker-toolbar-field-narrow {
+  flex: 0 1 160px;
+}
+
+.list-picker-toolbar-actions {
+  flex: 0 0 auto;
+  padding-bottom: 2px;
+}
+
+.list-picker-expand-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 14px;
+  margin-bottom: 4px;
+}
+
+/* space between show more button and save/remove button */
+.profile-form-submit {
+  margin-top: 20px;
+}
+
+.list-picker-expand-row .list-picker-expand {
+  width: auto;
+  min-width: 140px;
+}
+
+.subscriber-list-picker-expand-only .list-picker-summary {
+  margin-bottom: 8px;
+}
+
+.list-picker-summary {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: #666;
+}
+
+.list-picker-empty {
+  margin: 8px 0 0;
+  font-size: 14px;
+  color: #777;
+}
+
+.list-picker-item.is-hidden,
+.list-picker-empty.is-hidden {
   display: none;
 }
 
+.list-picker-items-stack {
+  margin-top: 0;
+}
+
+/* manager list row — checkboxes go side by side and wrap */
+.choice-group-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 24px;
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.choice-group-inline legend.form-label {
+  flex: 0 0 100%;
+  width: 100%;
+  margin-bottom: 4px;
+}
+
+.choice-group-inline .choice-option-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 0;
+  padding: 0;
+  border: none;
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+/* hide search results that do not match (JS adds is-hidden) */
+.choice-group-inline .list-picker-item.is-hidden {
+  display: none;
+}
+
+.choice-option-static {
+  color: #666;
+  font-size: 15px;
+  cursor: default;
+  background: none;
+}
+
+/* red remove button for managers */
+.profile-remove-selected-btn {
+  margin-top: 14px;
+  background: #c62828;
+}
+
+.profile-remove-selected-btn:hover {
+  background: #8e0000;
+}
+
+.profile-remove-selected-btn.is-hidden {
+  display: none;
+}
+
+/* profile page info box and section spacing */
 .profile-summary {
   background: #f4f7fb;
   border: 1px solid #dde3ed;
@@ -157,52 +272,6 @@ body {
   font-size: 14px;
 }
 
-.profile-list-names {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  color: #333;
-}
-
-.profile-list-names li {
-  margin-bottom: 0;
-}
-
-.profile-list-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px solid #dde3ed;
-}
-
-.profile-list-row:last-child {
-  border-bottom: none;
-}
-
-.profile-remove-list-form {
-  flex-shrink: 0;
-}
-
-.profile-remove-btn {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font: inherit;
-  padding: 0;
-  color: #c62828;
-  font-size: 14px;
-  font-weight: bold;
-  margin-left: 0;
-  text-decoration: none;
-}
-
-.profile-remove-btn:hover {
-  color: #8e0000;
-  text-decoration: underline;
-}
-
 .profile-create-list-form {
   margin-bottom: 8px;
 }
@@ -216,6 +285,12 @@ body {
 .form-inline-error.is-hidden {
   display: none;
 }
+
+/* hide list section on signup when role is not student */
+.campus-list-section.is-hidden {
+  display: none;
+}
+
 /* ----- end Saul Sprint 2 ----- */
 
 /* Creates the main page area that centers content on the screen */

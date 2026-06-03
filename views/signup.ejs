@@ -58,8 +58,10 @@
       />
     </div>
 
-    <% /* ----- Saul Sprint 2: account type dropdown and multi-select list checkboxes ----- */ %>
+    <% /* ----- Saul Sprint 2: account type and list checkboxes on signup ----- */ %>
+    <% /* remember which role was picked if the form failed */ %>
     <% const selectedSignupRole = (form && form.signup_role) ? form.signup_role : 'student'; %>
+    <% /* dropdown: student, manager, or staff */ %>
     <div class="form-group">
       <label for="signup-role" class="form-label">Account type</label>
       <select id="signup-role" name="signup_role" class="form-input">
@@ -69,26 +71,20 @@
       </select>
     </div>
 
+    <% /* list checkboxes — only shown for students (JS hides for manager/staff) */ %>
     <div id="campus-list-section" class="form-group campus-list-section<%= selectedSignupRole === 'student' ? '' : ' is-hidden' %>">
-      <fieldset class="choice-group">
-        <legend class="form-label">Subscriber lists (select one or more)</legend>
-        <% const selectedListIds = (form && form.selectedListIds) ? form.selectedListIds.map(String) : []; %>
-        <% if (typeof subscriberLists !== 'undefined' && subscriberLists && subscriberLists.length) { %>
-          <% subscriberLists.forEach(function(list) { %>
-          <label class="choice-option">
-            <input
-              type="checkbox"
-              name="list_ids"
-              value="<%= list.id %>"
-              <%= selectedListIds.includes(String(list.id)) ? 'checked' : '' %>
-            />
-            <span><%= list.name %></span>
-          </label>
-          <% }); %>
-        <% } else { %>
-          <p class="profile-empty">No subscriber lists are available yet.</p>
-        <% } %>
-      </fieldset>
+      <% /* keep checked lists if signup had an error */ %>
+      <% const selectedListIds = (form && form.selectedListIds) ? form.selectedListIds.map(String) : []; %>
+      <% /* shared picker — expandOnly means show more only, no search/sort */ %>
+      <%- include('partials/subscriberListPicker', {
+        pickerId: 'signup-list-picker',
+        lists: typeof subscriberLists !== 'undefined' ? subscriberLists : [],
+        selectedIds: selectedListIds,
+        layout: 'stack',
+        legend: 'Subscriber lists (select one or more)',
+        expandOnly: true
+      }) %>
+      <% /* shown by signup-role.js if student submits with no list checked */ %>
       <p id="signup-list-error" class="form-inline-error is-hidden" role="alert">Select at least one subscriber list.</p>
     </div>
     <% /* ----- end Saul Sprint 2 ----- */ %>
@@ -133,5 +129,6 @@
 </div>
 
 <script src="/password-toggle.js"></script>
+<script src="/subscriber-list-picker.js"></script>
 <script src="/signup-role.js"></script>
 <%- include('partials/footer') %>

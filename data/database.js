@@ -133,13 +133,12 @@ NotificationRecipient.init(
   { sequelize, modelName: 'NotificationRecipient', tableName: 'notification_recipient' }
 );
 
-/* ----- Saul Sprint 2: subscriber list models ----- */
-/**
- * A named subscriber list (campus or manager-created). Managers can add
- * new lists. students subscribe to one or more lists.
- */
+/* ----- Saul Sprint 2: database models for subscriber lists ----- */
+/* subscriber_lists table = list names (campus names, etc.) */
+
 class SubscriberList extends Model {}
 
+// map subscriber_lists table columns
 SubscriberList.init(
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
@@ -148,12 +147,11 @@ SubscriberList.init(
   { sequelize, modelName: 'SubscriberList', tableName: 'subscriber_lists' }
 );
 
-/**
- * Junction connecting students (subscribers) to the lists they belong to.
- * Maps to the existing dbo.user_list table.
- */
+/* user_list table = which student joined which list */
+
 class UserSubscriberList extends Model {}
 
+// map user_list table — links user_id to list_id
 UserSubscriberList.init(
   {
     list_id: {
@@ -171,6 +169,7 @@ UserSubscriberList.init(
   },
   { sequelize, modelName: 'UserSubscriberList', tableName: 'user_list' }
 );
+
 /* ----- end Saul Sprint 2 ----- */
 
 // -- Associations
@@ -191,19 +190,23 @@ UserModel.belongsToMany(Notification, {
   as: 'received_notifications'
 });
 
-/* ----- Saul Sprint 2: subscriber list associations ----- */
+/* ----- Saul Sprint 2: link users to lists in the database ----- */
+
+// a user can be on many lists through user_list
 UserModel.belongsToMany(SubscriberList, {
   through: UserSubscriberList,
   foreignKey: 'user_id',
   otherKey: 'list_id',
   as: 'subscriber_lists'
 });
+// a list can have many users through user_list
 SubscriberList.belongsToMany(UserModel, {
   through: UserSubscriberList,
   foreignKey: 'list_id',
   otherKey: 'user_id',
   as: 'subscribers'
 });
+
 /* ----- end Saul Sprint 2 ----- */
 
 // -- Initialization

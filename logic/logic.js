@@ -18,7 +18,8 @@ const User = require('../models/User');
 /* ----- Saul's code: email transport for Send Notification ----- */
 const { sendNotificationEmail } = require('./mail');
 /* ----- end Saul's code ----- */
-/* ----- Saul Sprint 2: subscriber list service ----- */
+
+/* ----- Saul Sprint 2: load list helper file ----- */
 const subscriberListService = require('./subscriberListService');
 /* ----- end Saul Sprint 2 ----- */
 
@@ -205,12 +206,15 @@ async function signup(body) {
         );
       }
 
-      /* ----- Saul Sprint 2: subscribe students to selected lists at signup ----- */
+      /* ----- Saul Sprint 2: save student list picks at signup ----- */
+      // only students pick lists — managers and staff do not
       if (user.role === ROLE_SUBSCRIBER) {
+        // read checked list_ids from the signup form
         const listIds = subscriberListService.parseListIdsFromBody(body);
         if (!listIds.length) {
           throw new AuthError('Select at least one subscriber list.');
         }
+        // save picks to user_list in the same database transaction
         await subscriberListService.updateUserSubscriptions(user.id, listIds, t);
       }
       /* ----- end Saul Sprint 2 ----- */
@@ -286,15 +290,18 @@ async function getCurrentUser(userId) {
  * @returns {Promise<void>}
  */
 async function sendBroadcastNotification({ subject, body, senderName, senderEmail, listIds }) {
-  /* ----- Saul Sprint 2: resolve recipients from selected subscriber lists ----- */
+  /* ----- Saul Sprint 2: email only students on picked lists ----- */
+  // make sure we got at least one list id from the form
   const selectedListIds = Array.isArray(listIds) ? listIds : [];
   if (!selectedListIds.length) {
     throw new AuthError('Select at least one subscriber list.');
   }
 
+  // look up student emails for those lists (or all students if All Subscribers)
   const recipients = await subscriberListService.getSubscribersForLists(selectedListIds);
   /* ----- end Saul Sprint 2 ----- */
 
+  // no one on those lists yet — tell the manager
   if (!recipients.length) {
     throw new AuthError(
       'No recipients found on the selected lists. Students must subscribe to a list first.'
@@ -329,57 +336,49 @@ async function sendBroadcastNotification({ subject, body, senderName, senderEmai
 }
 /* ----- end Saul's code ----- */
 
-/* ----- Saul Sprint 2: profile and list management ----- */
-/**
- * Load profile data for the current user (subscriptions or list admin).
- * @param {{id:number, role:string}} user
- * @returns {Promise<object>}
- */
+/* ----- Saul Sprint 2: profile page and list management ----- */
+
+// Load lists and subscriptions for /profile
 async function getProfileData(user) {
   const role = String(user.role || '').trim().toLowerCase();
 
+  // student profile — show campus lists and what they already joined
   if (role === ROLE_SUBSCRIBER) {
     const subscriberLists = await subscriberListService.getCampusLists();
     const subscribedListIds = await subscriberListService.getUserListIds(user.id);
     return { subscriberLists, subscribedListIds, isManagerProfile: false };
   }
 
+  // manager profile — show all lists including All Subscribers
   if (role === ROLE_MANAGER) {
     const subscriberLists = await subscriberListService.getAllLists();
     return { subscriberLists, subscribedListIds: [], isManagerProfile: true };
   }
 
+  // staff and other roles — no list tools on profile
   return { subscriberLists: [], subscribedListIds: [], isManagerProfile: false };
 }
 
-/**
- * Update a student's list subscriptions from the profile page.
- * @param {number} userId
- * @param {number[]} listIds
- * @returns {Promise<void>}
- */
+// Student clicked Save Subscriptions on profile — rewrite their user_list rows
 async function updateStudentSubscriptions(userId, listIds) {
   await subscriberListService.updateUserSubscriptions(userId, listIds);
 }
 
-/**
- * Manager creates a new subscriber list from the profile page.
- * @param {string} name
- * @param {number} managerUserId
- * @returns {Promise<{id:number, name:string}>}
- */
+// Manager typed a new list name and clicked Create List
 async function createManagerSubscriberList(name, managerUserId) {
   return subscriberListService.createSubscriberList(name, managerUserId);
 }
 
-/**
- * Manager removes a subscriber list from the profile page (Saul Sprint 2).
- * @param {number} listId
- * @returns {Promise<{name:string}>}
- */
+// Manager removed one list from the remove form
 async function deleteManagerSubscriberList(listId) {
   return subscriberListService.deleteSubscriberList(listId);
 }
+
+// Manager removed several checked lists at once
+async function deleteManagerSubscriberLists(listIds) {
+  return subscriberListService.deleteSubscriberLists(listIds);
+}
+
 /* ----- end Saul Sprint 2 ----- */
 
 module.exports = {
@@ -394,11 +393,12 @@ module.exports = {
   mayAccessSendNotification,
   resolveBroadcastSender,
   /* ----- end Saul's code ----- */
-  /* ----- Saul Sprint 2 ----- */
+  /* ----- Saul Sprint 2: export list + profile helpers ----- */
   getProfileData,
   updateStudentSubscriptions,
   createManagerSubscriberList,
   deleteManagerSubscriberList,
+  deleteManagerSubscriberLists,
   subscriberListService
   /* ----- end Saul Sprint 2 ----- */
 };
