@@ -186,9 +186,7 @@ app.get('/signup', async (req, res, next) => {
 });
 
 /**
- * Handle a signup submission. We pull a "sticky form" copy of the
- * fields up front so we can re-render the form with the user's input
- * preserved if anything fails validation.
+ * Handle a signup submission.
  */
 app.post('/signup', async (req, res, next) => {
   const form = {
@@ -203,9 +201,6 @@ app.post('/signup', async (req, res, next) => {
   };
   try {
     const { first_name } = await logic.signup(req.body);
-    // Deliberately does NOT auto-log them in. They go to a confirmation
-    // page and have to explicitly log in with the credentials they
-    // just chose. It's a nice gentle check that they remember them.
     req.flash('success', `Account created successfully${first_name ? ', ' + first_name : ''}!`);
     res.redirect('/signup/success');
   } catch (error) {
