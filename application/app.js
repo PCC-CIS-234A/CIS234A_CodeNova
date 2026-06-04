@@ -21,7 +21,12 @@ const notificationRoutes = require('./notificationRoutes');
 /* ----- end Saul's code ----- */
 
 const logic = require('../logic/logic');
-const { AuthError } = logic;
+const { AuthError, ACCOUNT_ACCESS_TTL_MS } = logic;
+
+/** Build the scheme+host base URL from the incoming request. */
+function appBaseUrl(req) {
+  return `${req.protocol}://${req.get('host')}`;
+}
 
 const app = express();
 
@@ -225,12 +230,60 @@ app.post('/logout', (req, res) => {
 // ---- Account edit + delete
 
 /**
+ * Check whether the current session has a valid step-up access grant for
+ * the account-edit page. The grant is stored as { token, grantedAt } in
+ * req.session.accountAccess and expires after ACCOUNT_ACCESS_TTL_MS.
+ */
+function hasAccountAccess(req) {
+  const grant = req.session.accountAccess;
+  if (!grant || !grant.grantedAt) return false;
+  return (Date.now() - grant.grantedAt) < ACCOUNT_ACCESS_TTL_MS;
+}
+
+/**
+ * Step 1 of the step-up flow: user hits /account without a valid grant.
+ * We email them a one-time link and show a "check your inbox" page.
+ */
+app.get('/account/request-access', async (req, res, next) => {
+  if (!req.currentUser) return res.redirect('/login');
+  if (hasAccountAccess(req)) return res.redirect('/account');
+  try {
+    const token = await logic.sendAccountAccessLink(req.currentUser, appBaseUrl(req));
+    // Store the pending token in the session so we can validate it when
+    // the user clicks the link. We intentionally don't grant access yet.
+    req.session.accountAccessPendingToken = token;
+    res.render('account-access-sent', { title: 'Check Your Email' });
+  } catch (err) {
+    req.flash('error', 'Could not send access email. Please try again.');
+    res.redirect('/');
+  }
+});
+
+/**
+ * Step 2: user clicks the link from their email. We validate the token
+ * against what's in the session, grant access, and redirect to /account.
+ */
+app.get('/account/access', (req, res) => {
+  if (!req.currentUser) return res.redirect('/login');
+  const token = req.query.token || '';
+  if (!token || token !== req.session.accountAccessPendingToken) {
+    req.flash('error', 'This access link is invalid or has already been used.');
+    return res.redirect('/account/request-access');
+  }
+  // Consume the pending token and record when access was granted.
+  delete req.session.accountAccessPendingToken;
+  req.session.accountAccess = { grantedAt: Date.now() };
+  res.redirect('/account');
+});
+
+/**
  * Render the account-edit form for the currently logged-in user.
- * Guests get bounced to login. The form is pre-filled from the user's
- * current details so they only need to change what they want to change.
+ * Guests get bounced to login. Users without a valid step-up grant get
+ * sent through the email flow first.
  */
 app.get('/account', (req, res) => {
   if (!req.currentUser) return res.redirect('/login');
+  if (!hasAccountAccess(req)) return res.redirect('/account/request-access');
   const form = {
     username:   req.currentUser.username,
     first_name: req.currentUser.first_name,
@@ -242,11 +295,12 @@ app.get('/account', (req, res) => {
 
 /**
  * Apply the edits from the account-edit form. Role is never read from
- * the request body - the logic layer pins it to the row's current
- * value - so submitting a forged "role" field has no effect.
+ * the request body, the logic layer pins it to the row's current
+ * value, so submitting a forged "role" field has no effect.
  */
 app.post('/account', async (req, res, next) => {
   if (!req.currentUser) return res.redirect('/login');
+  if (!hasAccountAccess(req)) return res.redirect('/account/request-access');
   const form = {
     username:   (req.body.username || '').trim().toLowerCase(),
     first_name: (req.body.first_name || '').trim(),

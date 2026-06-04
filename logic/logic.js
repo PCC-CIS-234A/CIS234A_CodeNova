@@ -15,8 +15,9 @@ const bcrypt = require('bcryptjs');
 const config = require('../config');
 const { sequelize, Op, UserModel, Notification, NotificationRecipient } = require('../data/database');
 const User = require('../models/User');
+const crypto = require('crypto');
 /* ----- Saul's code: email transport for Send Notification ----- */
-const { sendNotificationEmail } = require('./mail');
+const { sendNotificationEmail, sendAccountAccessEmail } = require('./mail');
 /* ----- end Saul's code ----- */
 
 
@@ -214,11 +215,35 @@ async function signup(body) {
   }
 }
 
+/** How long (ms) a step-up access token is valid. */
+const ACCOUNT_ACCESS_TTL_MS = 15 * 60 * 1000; // 15 minutes
+
+/**
+ * Generate a one-time token and send it to the user's email so
+ * they can reach the account-edit page. The token itself is stored in
+ * the caller's session (not the database), so no DB schema changes are needed.
+ * Returns the generated token.
+ *
+ * @param {object} user        The currentUser object (id, email, first_name).
+ * @param {string} appBaseUrl  e.g. 'https://example.com'
+ * @returns {Promise<string>}  The raw token.
+ */
+async function sendAccountAccessLink(user, appBaseUrl) {
+  const token = crypto.randomBytes(32).toString('hex');
+  const accessUrl = `${appBaseUrl}/account/access?token=${token}`;
+  await sendAccountAccessEmail({
+    toEmail: user.email,
+    firstName: user.first_name,
+    accessUrl
+  });
+  return token;
+}
+
 /**
  * Look up the user by either their username or their email and check
  * the typed password against the stored bcrypt hash. If we can't find
  * them, we still run bcrypt against a dummy hash so the response time
- * is roughly the same -- an attacker can't probe for valid accounts
+ * is roughly the same and an attacker can't probe for valid accounts
  * by timing the response.
  *
  * @param {object} body  The Express req.body from POST /login.
@@ -394,10 +419,10 @@ async function deleteAccount(userId, password) {
         where: { user_id: userId },
         transaction: t
       });
-      // user_list has a FK to users(user_id) but no Sequelize model in
-      // this app, so we hit it with a raw parameterized DELETE. Same
-      // story as notification_recipient: clear the references first
-      // or SQL Server refuses to drop the parent row.
+      // user_list (Rothy) has a FK to users(user_id) but no Sequelize model
+      // in this app, so we hit it with a raw parameterized DELETE. Same
+      // story as notification_recipient where we clear the references first
+      // so SQL Server doesn't refuse to drop the parent row.
       await sequelize.query(
         'DELETE FROM user_list WHERE user_id = :userId',
         {
@@ -476,6 +501,8 @@ module.exports = {
   sendBroadcastNotification,
   canUserSendNotifications,
   pickSignupRoleFromBody,
+  sendAccountAccessLink,
+  ACCOUNT_ACCESS_TTL_MS,
   /* ----- Saul's code ----- */
   mayAccessSendNotification,
   resolveBroadcastSender

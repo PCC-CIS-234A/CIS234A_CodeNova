@@ -183,4 +183,85 @@ async function sendNotificationEmail({ subject, body, senderName, senderEmail, b
   await transporter.sendMail(mailOptions);
 }
 
-module.exports = { sendNotificationEmail };
+/**
+ *
+ *
+ * Send a step-up access link so the user can reach the account-edit page
+ *
+ * @param {object} opts
+ * @param {string} opts.toEmail      Recipient address.
+ * @param {string} opts.firstName    User's first name for the greeting.
+ * @param {string} opts.accessUrl    The full https://…/account/access?token=… URL.
+ */
+async function sendAccountAccessEmail({ toEmail, firstName, accessUrl }) {
+  const { from } = config.smtp;
+  if (!from) throw new Error('MAIL_FROM is missing in configuration.');
+
+  const transporter = createTransporter();
+
+  const escapedUrl = escapeHtml(accessUrl);
+  const escapedName = escapeHtml(firstName || 'there');
+
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Access your account settings – PCC Food Pantry</title>
+</head>
+<body style="margin:0;padding:0;background-color:#eceff3;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color:#eceff3;">
+    <tr>
+      <td align="center" style="padding:32px 16px 48px 16px;">
+        <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="max-width:600px;width:100%;border-radius:16px;overflow:hidden;background-color:#ffffff;box-shadow:0 12px 40px rgba(15,23,42,0.08);">
+          <tr>
+            <td style="background-color:#008EAA;background-image:linear-gradient(135deg,#0099b3 0%,#006f82 100%);padding:28px 36px;">
+              <span style="font-size:22px;font-weight:700;color:#ffffff;">PCC Food Pantry</span>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:36px 36px 28px 36px;">
+              <h1 style="margin:0 0 16px 0;font-size:24px;font-weight:700;color:#111827;">Access your account settings</h1>
+              <p style="margin:0 0 16px 0;font-size:16px;line-height:1.65;color:#3d3d3d;">Hi ${escapedName},</p>
+              <p style="margin:0 0 24px 0;font-size:16px;line-height:1.65;color:#3d3d3d;">
+                Click the button below to access your account settings. This link is valid for 15 minutes.
+              </p>
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                <tr>
+                  <td style="border-radius:8px;background-color:#008EAA;">
+                    <a href="${escapedUrl}" target="_blank" style="display:inline-block;padding:14px 28px;font-size:16px;font-weight:600;color:#ffffff;text-decoration:none;border-radius:8px;">Edit my account</a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:24px 0 0 0;font-size:13px;line-height:1.5;color:#6b7280;">
+                This link expires in 15 minutes. If you did not request this, you can safely ignore this email.
+              </p>
+              <p style="margin:16px 0 0 0;font-size:13px;color:#9ca3af;word-break:break-all;">
+                Or copy this URL into your browser: ${escapedUrl}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 24px 28px 24px;font-size:12px;color:#9ca3af;">
+              PCC Food Pantry · Portland Community College
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+  const text = `Hi ${firstName || 'there'},\n\nClick this link to access your account settings (valid for 15 minutes):\n${accessUrl}\n\nIf you did not request this, ignore this email.\n\nPCC Food Pantry`;
+
+  await transporter.sendMail({
+    from,
+    to: toEmail,
+    subject: 'Access your account settings – PCC Food Pantry',
+    text,
+    html
+  });
+}
+
+module.exports = { sendNotificationEmail, sendAccountAccessEmail };

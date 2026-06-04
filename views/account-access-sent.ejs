@@ -1,0 +1,20 @@
+<%- include('partials/header', { title }) %>
+
+<div class="card">
+  <h1>Check Your Email</h1>
+
+  <%- include('partials/flash') %>
+
+  <p>
+    We sent a link to <strong><%= currentUser.email %></strong>.
+    Click it to access your account settings. The link is valid for 15 minutes.
+  </p>
+
+  <p>Didn't get it? Check your spam folder, or go back and try again.</p>
+
+  <div class="form-secondary-actions">
+    <a href="/" class="btn btn-compact btn-secondary">Return Home</a>
+  </div>
+</div>
+
+<%- include('partials/footer') %>

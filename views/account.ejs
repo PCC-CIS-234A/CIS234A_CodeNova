@@ -13,21 +13,6 @@
   -->
   <form method="POST" action="/account">
     <div class="form-group">
-      <label for="account-username" class="form-label">Username</label>
-      <input
-        type="text"
-        id="account-username"
-        name="username"
-        class="form-input"
-        value="<%= (form && form.username) || '' %>"
-        pattern="[A-Za-z0-9._\-]{3,30}"
-        title="3-30 characters: letters, numbers, dot, underscore, or hyphen"
-        autocomplete="username"
-        required
-      />
-    </div>
-
-    <div class="form-group">
       <label for="account-first-name" class="form-label">First name</label>
       <input
         type="text"
@@ -61,22 +46,6 @@
         value="<%= (form && form.email) || '' %>"
         required
       />
-    </div>
-
-    <div class="form-group">
-      <label for="account-role" class="form-label">Account type</label>
-      <input
-        type="text"
-        id="account-role"
-        class="form-input"
-        value="<%= currentUser.role %>"
-        disabled
-        readonly
-        title="Account type cannot be changed from this page."
-      />
-      <div class="small-text" style="text-align:left;margin-top:4px;">
-        Account type cannot be changed here.
-      </div>
     </div>
 
     <hr style="border:none;border-top:1px solid #e8ecf2;margin:20px 0;" />
