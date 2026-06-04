@@ -1,14 +1,19 @@
-<!-- Shows success flash messages if any were added on the previous request. -->
+<!-- Shows manually passed flash message, used when rendering the same page. -->
+<% if (typeof flash !== "undefined" && flash) { %>
+  <div class="flash <%= flash.type %>">
+    <%= flash.message %>
+  </div>
+<% } %>
+
+<!-- Shows success flash messages added through req.flash. -->
 <% if (messages && messages.success) { %>
-  <!-- Displays success message(s) -->
   <% messages.success.forEach((message) => { %>
     <div class="flash success"><%= message %></div>
   <% }) %>
 <% } %>
 
-<!-- Shows error flash messages if any were added on the previous request. -->
+<!-- Shows error flash messages added through req.flash. -->
 <% if (messages && messages.error) { %>
-  <!-- Displays error message(s) -->
   <% messages.error.forEach((message) => { %>
     <div class="flash error"><%= message %></div>
   <% }) %>

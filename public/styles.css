@@ -489,4 +489,56 @@ h1 {
   color: #222;
 }
 
+/* Scrollable table area */
+.table-scroll {
+  max-height: 380px;
+  overflow-y: auto;
+  border: 1px solid #ccd3e0;
+  border-radius: 8px;
+  margin-top: 18px;
+}
+
+/* Remove extra top margin from table inside scroll area */
+.table-scroll .log-table {
+  margin-top: 0;
+}
+
+/* Keep headers visible while scrolling */
+.log-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #008EAA;
+}
+
+/* Sortable column headers */
+.sortable-header {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+}
+
+.sortable-header:hover {
+  background-color: #d8eef4;
+}
+
+/* Selected row */
+.notification-clickable-row.active {
+  background-color: #eef6f8;
+}
+
+/* Details box below table */
+.details-box {
+  margin-top: 20px;
+  padding: 16px;
+  border: 1px solid #ccd3e0;
+  border-radius: 8px;
+  background: #f9fbfc;
+}
+
+.details-box h2 {
+  margin-top: 0;
+  color: #008EAA;
+}
+
 /* ----- end Maeve's / Noah's code ----- */

@@ -1,11 +1,11 @@
 <%- include('../partials/header', { title }) %>
 
 <div class="log-box">
-    <h1>Notification Log</h1>
+    <h1>Notification Archive</h1>
 
     <%- include('../partials/flash') %>
 
-    <form method="GET" action="/notifications/log" class="filter-bar">
+    <form method="GET" action="/notifications/archive" class="filter-bar">
         <div class="filter-field">
             <label class="form-label" for="from">From</label>
             <input
@@ -31,14 +31,17 @@
         <div class="filter-actions">
             <button type="submit" class="btn btn-compact">Apply</button>
 
-            <a href="/notifications/log"
+            <a href="/notifications/archive"
                class="btn btn-compact btn-secondary btn-link-action">
                 Clear
             </a>
 
             <% if (currentUser && currentUser.role === "manager") { %>
-                <a href="/notifications/archive" class="btn btn-compact">
-                    View Archive
+                <a
+                        href="/notifications/archive/export?from=<%= filters.from || '' %>&to=<%= filters.to || '' %>"
+                        class="btn btn-compact"
+                >
+                    Export to Excel
                 </a>
             <% } %>
         </div>
@@ -46,12 +49,15 @@
 
     <p class="log-summary">
         Showing <%= notifications.length %>
-        notification<%= notifications.length === 1 ? '' : 's' %><% if (filters.from || filters.to) { %>
-            between <%= filters.from || 'the beginning' %> and <%= filters.to || 'today' %><% } %>.
+        archived notification<%= notifications.length === 1 ? '' : 's' %>.
     </p>
 
     <% if (notifications.length === 0) { %>
-        <div class="log-empty">No notifications match the current filter.</div>
+
+        <div class="log-empty">
+            No archived notifications match the current filter.
+        </div>
+
     <% } else { %>
 
         <div class="table-scroll">
@@ -77,24 +83,20 @@
                             data-recipients="<%= n.recipient_count %>"
                     >
                         <td class="log-date"><%= n.sent_at_display %></td>
-                        <td><%= n.sender_email %></td>
-                        <td>
-                            <span id="subject-preview-<%= index %>">
-                                 <%= n.subject.length > 25
-                                         ? n.subject.substring(0, 25) + '...'
-                                         : n.subject
-                                 %>
-                            </span>
 
-                            <span id="subject-full-<%= index %>" style="display: none;">
-                                <%= n.subject %>
-                            </span>
+                        <td><%= n.sender_email %></td>
+
+                        <td>
+                            <%= n.subject.length > 25
+                                    ? n.subject.substring(0, 25) + '...'
+                                    : n.subject
+                            %>
                         </td>
 
                         <td class="log-body">
                             <span id="message-preview-<%= index %>">
-                                <%= n.body.length > 25
-                                        ? n.body.substring(0, 25) + '...'
+                                <%= n.body.length > 45
+                                        ? n.body.substring(0, 45) + '...'
                                         : n.body
                                 %>
                             </span>
@@ -104,7 +106,9 @@
                             </span>
                         </td>
 
-                        <td class="log-recipients"><%= n.recipient_count %></td>
+                        <td class="log-recipients">
+                            <%= n.recipient_count %>
+                        </td>
                     </tr>
                 <% }) %>
                 </tbody>
@@ -118,6 +122,7 @@
                 <p>Select a notification to view details.</p>
             </div>
         </div>
+
     <% } %>
 </div>
 
