@@ -39,4 +39,20 @@ describe('Send Notification validation', () => {
       (err) => err.name === 'AuthError' && /Not authorized/.test(err.message)
     );
   });
+
+  it('resolveBroadcastSender returns manager username for notification log', () => {
+    const req = {
+      currentUser: {
+        role: 'manager',
+        username: 'patlee',
+        first_name: 'Pat',
+        last_name: 'Lee',
+        email: 'p@example.com'
+      },
+      session: {}
+    };
+    const sender = logic.resolveBroadcastSender(req);
+    assert.equal(sender.senderUsername, 'patlee');
+    assert.equal(sender.senderName, 'Pat Lee');
+  });
 });

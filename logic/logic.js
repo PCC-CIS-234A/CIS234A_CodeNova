@@ -115,6 +115,7 @@ function resolveBroadcastSender(req) {
   if (u && canUserSendNotifications(u)) {
     return {
       senderName: `${u.first_name} ${u.last_name}`,
+      senderUsername: u.username,
       senderEmail: u.email
     };
   }
@@ -129,6 +130,7 @@ function resolveBroadcastSender(req) {
     }
     return {
       senderName: config.app.devBypassSenderName,
+      senderUsername: 'dev-bypass',
       senderEmail
     };
   }
@@ -286,10 +288,10 @@ async function getCurrentUser(userId) {
 /**
  * Send one broadcast notification to subscribers on the selected lists.
  *
- * @param {object} opts  { subject, body, senderName, senderEmail, listIds }.
+ * @param {object} opts  { subject, body, senderName, senderUsername, senderEmail, listIds }.
  * @returns {Promise<void>}
  */
-async function sendBroadcastNotification({ subject, body, senderName, senderEmail, listIds }) {
+async function sendBroadcastNotification({ subject, body, senderName, senderUsername, senderEmail, listIds }) {
   /* ----- Saul Sprint 2: email only students on picked lists ----- */
   // make sure we got at least one list id from the form
   const selectedListIds = Array.isArray(listIds) ? listIds : [];
@@ -320,7 +322,8 @@ async function sendBroadcastNotification({ subject, body, senderName, senderEmai
   await sequelize.transaction(async (t) => {
     const notification = await Notification.create(
       {
-        sender_email: String(senderEmail).slice(0, 100),
+        // DB column is sender_email but stores the manager username for the log
+        sender_email: String(senderUsername || senderEmail).slice(0, 100),
         subject: String(subject).slice(0, 150),
         body,
         recipient_count: recipients.length

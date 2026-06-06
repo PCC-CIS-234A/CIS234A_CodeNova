@@ -135,12 +135,13 @@ app.post('/sendNotification', async (req, res) => {
   }
 
   try {
-    const { senderName, senderEmail } = logic.resolveBroadcastSender(req);
+    const { senderName, senderUsername, senderEmail } = logic.resolveBroadcastSender(req);
     // email only students on the lists that were checked
     await logic.sendBroadcastNotification({
       subject,
       body,
       senderName,
+      senderUsername,
       senderEmail,
       listIds: selectedListIds
     });
