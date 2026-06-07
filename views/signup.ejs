@@ -59,20 +59,15 @@
     </div>
 
     <% /* ----- Saul Sprint 2: account type and list checkboxes on signup ----- */ %>
-    <% /* remember which role was picked if the form failed */ %>
-    <% const selectedSignupRole = (form && form.signup_role) ? form.signup_role : 'student'; %>
-    <% /* dropdown: student, manager, or staff */ %>
+    <% /* signup is student only — hidden field posts signup_role=student */ %>
+    <input type="hidden" name="signup_role" value="student" />
     <div class="form-group">
-      <label for="signup-role" class="form-label">Account type</label>
-      <select id="signup-role" name="signup_role" class="form-input">
-        <option value="student" <%= selectedSignupRole === 'student' ? 'selected' : '' %>>Student (Subscriber)</option>
-        <option value="manager" <%= selectedSignupRole === 'manager' ? 'selected' : '' %>>Manager</option>
-        <option value="staff" <%= selectedSignupRole === 'staff' ? 'selected' : '' %>>Staff</option>
-      </select>
+      <span class="form-label">Account type</span>
+      <p class="signup-role-fixed">Student (Subscriber)</p>
     </div>
 
-    <% /* list checkboxes — only shown for students (JS hides for manager/staff) */ %>
-    <div id="campus-list-section" class="form-group campus-list-section<%= selectedSignupRole === 'student' ? '' : ' is-hidden' %>">
+    <% /* list checkboxes for student signup */ %>
+    <div id="campus-list-section" class="form-group campus-list-section">
       <% /* keep checked lists if signup had an error */ %>
       <% const selectedListIds = (form && form.selectedListIds) ? form.selectedListIds.map(String) : []; %>
       <% /* shared picker — expandOnly means show more only, no search/sort */ %>

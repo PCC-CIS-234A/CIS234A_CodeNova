@@ -291,6 +291,12 @@ body {
   display: none;
 }
 
+.signup-role-fixed {
+  margin: 0;
+  font-size: 15px;
+  color: #333;
+}
+
 /* ----- end Saul Sprint 2 ----- */
 
 /* Creates the main page area that centers content on the screen */
