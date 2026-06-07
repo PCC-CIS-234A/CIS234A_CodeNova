@@ -4,7 +4,7 @@ Team CodeNova: Noah McGarry, Saul Bravo, Maeve Davis, Rothy Thach
 
 Noah McGarry - Account Creation/Login
 Saul Bravo - Send Notifications
-Rothy Thach - DB Interactions
+Rothy Thach - Notifications/DB
 Maeve Davis - Notification Log
 
 Express + EJS + Sequelize (SQL Server). Sessions for login state,

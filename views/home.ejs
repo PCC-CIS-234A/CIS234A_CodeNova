@@ -5,9 +5,12 @@
 
   <% if (currentUser) { %>
     <h1>Welcome, <%= currentUser.first_name %>!</h1>
-    <p>You are logged in.</p>
-    <% /* ----- Saul's / Noah's code: role-based action links ----- */ %>
+    <p>You are logged in to the PCC Food Pantry System.</p>
+    <% /* ----- Role-based action links ----- */ %>
     <% const _role = String(currentUser.role || '').trim().toLowerCase(); %>
+    <% if (_role === 'subscriber') { %>
+    <p>You will receive email updates from the PCC Food Pantry in your inbox!</p>
+    <% } %>
     <% if (_role === 'manager' || _role === 'staff') { %>
     <div class="home-actions">
       <% if (_role === 'manager') { %>

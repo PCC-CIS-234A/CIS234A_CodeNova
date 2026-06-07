@@ -138,8 +138,7 @@ function resolveBroadcastSender(req) {
  * run its structural validators, hash the password, and then insert
  * the row inside a transaction with the database. After the insert
  * we check the row to make sure no AFTER INSERT trigger or column
- * default rewrote the role behind our back -- better to fail loudly
- * than to silently store the wrong role.
+ * default rewrote the role behind our back.
  *
  * Throws AuthError on user-fixable problems (validation issues,
  * duplicate username/email). Other errors issue normally.
@@ -316,7 +315,7 @@ async function updateAccount(userId, body) {
   // that stops a user from elevating their own role via a hidden field.
   const user = new User({
     id:         row.id,
-    username:   body.username,
+    username:   body.username || row.username,
     first_name: body.first_name,
     last_name:  body.last_name,
     email:      body.email,
