@@ -25,7 +25,7 @@ router.get("/log", async (req, res) => {
     }
 
     try {
-        const { from, to } = req.query;
+        const { from, to, search } = req.query;
 
         let flash = null;
         let notifications = [];
@@ -38,13 +38,13 @@ router.get("/log", async (req, res) => {
 
             notifications = await notificationService.getFilteredNotifications();
         } else {
-            notifications = await notificationService.getFilteredNotifications(from, to);
+            notifications = await notificationService.getFilteredNotifications(from, to, search);
         }
 
         res.render("notifications/log", {
             title: "Notification Log",
             notifications,
-            filters: { from, to },
+            filters: { from, to, search },
             flash,
             currentUser: user
         });
@@ -71,7 +71,7 @@ router.get("/archive", async (req, res) => {
     }
 
     try {
-        const { from, to } = req.query;
+        const { from, to, search } = req.query;
 
         let flash = null;
         let notifications = [];
@@ -84,13 +84,13 @@ router.get("/archive", async (req, res) => {
 
             notifications = await archiveService.getArchivedNotifications();
         } else {
-            notifications = await archiveService.getArchivedNotifications(from, to);
+            notifications = await archiveService.getArchivedNotifications(from, to, search);
         }
 
         res.render("notifications/archive", {
             title: "Notification Archive",
             notifications,
-            filters: { from, to },
+            filters: { from, to, search },
             flash,
             currentUser: user
         });
@@ -111,13 +111,13 @@ router.get("/archive/export", async (req, res) => {
             return res.status(403).send("Access denied. Managers only.");
         }
 
-        const { from, to } = req.query;
+        const { from, to, search } = req.query;
 
         if (isInvalidDateRange(from, to)) {
             return res.status(400).send("Invalid date range.");
         }
 
-        const notifications = await archiveService.getArchivedNotifications(from, to);
+        const notifications = await archiveService.getArchivedNotifications(from, to, search);
 
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Notification Archive");

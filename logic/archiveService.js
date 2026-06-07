@@ -1,6 +1,6 @@
 const { sequelize } = require("../data/database");
 
-async function getArchivedNotifications(from, to) {
+async function getArchivedNotifications(from, to, search) {
     let sql = `
         SELECT
             id,
@@ -13,15 +13,34 @@ async function getArchivedNotifications(from, to) {
     `;
 
     const replacements = {};
+    const conditions = [];
 
     if (from && to) {
-        sql += `
-            WHERE sent_at >= :from
-            AND sent_at < DATEADD(day, 1, :to)
-        `;
+        conditions.push(`
+        sent_at >= :from
+        AND sent_at < DATEADD(day, 1, :to)
+    `);
 
         replacements.from = from;
         replacements.to = to;
+    }
+
+    if (search) {
+        conditions.push(`
+        (
+            sender_email LIKE :search
+            OR subject LIKE :search
+            OR body LIKE :search
+        )
+    `);
+
+        replacements.search = `%${search}%`;
+    }
+
+    if (conditions.length > 0) {
+        sql += `
+        WHERE ${conditions.join(" AND ")}
+    `;
     }
 
     sql += `

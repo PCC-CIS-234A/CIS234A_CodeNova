@@ -28,6 +28,18 @@
             />
         </div>
 
+        <div class="filter-field">
+            <label class="form-label" for="search">Search</label>
+            <input
+                    type="text"
+                    id="search"
+                    name="search"
+                    class="form-input"
+                    placeholder="Search by keyword or sender"
+                    value="<%= filters.search || '' %>"
+            />
+        </div>
+
         <div class="filter-actions">
             <button type="submit" class="btn btn-compact">Apply</button>
 
@@ -38,7 +50,7 @@
 
             <% if (currentUser && currentUser.role === "manager") { %>
                 <a
-                        href="/notifications/archive/export?from=<%= filters.from || '' %>&to=<%= filters.to || '' %>"
+                        href="/notifications/archive/export?from=<%= filters.from || '' %>&to=<%= filters.to || '' %>&search=<%= filters.search || '' %>"
                         class="btn btn-compact"
                 >
                     Export to Excel
