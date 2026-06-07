@@ -91,7 +91,7 @@ app.get('/', (req, res) => {
 app.get('/sendNotification', async (req, res, next) => {
   if (!logic.mayAccessSendNotification(req)) {
     if (!req.currentUser) return res.redirect('/login');
-    req.flash('error', 'Only managers can send notifications.');
+    req.flash('error', 'Only managers and staff can send notifications.');
     return res.redirect('/');
   }
   try {
@@ -108,7 +108,7 @@ app.get('/sendNotification', async (req, res, next) => {
 app.post('/sendNotification', async (req, res) => {
   if (!logic.mayAccessSendNotification(req)) {
     if (!req.currentUser) return res.redirect('/login');
-    req.flash('error', 'Only managers can send notifications.');
+    req.flash('error', 'Only managers and staff can send notifications.');
     return res.redirect('/');
   }
 
@@ -305,7 +305,7 @@ app.post('/profile/subscriptions', async (req, res) => {
 app.post('/profile/lists', async (req, res) => {
   if (!req.currentUser) return res.redirect('/login');
   // only managers can create lists
-  if (!logic.canUserSendNotifications(req.currentUser)) {
+  if (!logic.canUserManageSubscriberLists(req.currentUser)) {
     req.flash('error', 'Only managers can create subscriber lists.');
     return res.redirect('/profile');
   }
@@ -325,7 +325,7 @@ app.post('/profile/lists', async (req, res) => {
 app.post('/profile/lists/delete', async (req, res) => {
   if (!req.currentUser) return res.redirect('/login');
   // only managers can delete lists
-  if (!logic.canUserSendNotifications(req.currentUser)) {
+  if (!logic.canUserManageSubscriberLists(req.currentUser)) {
     req.flash('error', 'Only managers can remove subscriber lists.');
     return res.redirect('/profile');
   }

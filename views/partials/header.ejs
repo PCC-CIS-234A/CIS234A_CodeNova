@@ -18,10 +18,8 @@
       <% if (currentUser) { %>
         <% /* ----- Noah's code: role-based nav links ----- */ %>
         <% const _navRole = String(currentUser.role || '').trim().toLowerCase(); %>
-        <% if (_navRole === 'manager') { %>
+        <% if (_navRole === 'manager' || _navRole === 'staff') { %>
           <a href="/sendNotification">Send Notification</a>
-          <a href="/notifications/log">Notification Log</a>
-        <% } else if (_navRole === 'staff') { %>
           <a href="/notifications/log">Notification Log</a>
         <% } %>
         <% /* ----- end Noah's code ----- */ %>

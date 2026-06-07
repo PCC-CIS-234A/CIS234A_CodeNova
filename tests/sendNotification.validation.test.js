@@ -14,6 +14,11 @@ describe('Send Notification validation', () => {
     assert.equal(logic.canUserSendNotifications(user), true);
   });
 
+  it('canUserSendNotifications returns true for staff', () => {
+    const user = { role: 'staff' };
+    assert.equal(logic.canUserSendNotifications(user), true);
+  });
+
   it('canUserSendNotifications returns false for subscriber', () => {
     const user = { role: 'subscriber' };
     assert.equal(logic.canUserSendNotifications(user), false);
@@ -22,6 +27,14 @@ describe('Send Notification validation', () => {
   it('mayAccessSendNotification returns true for manager request', () => {
     const req = {
       currentUser: { role: 'manager', first_name: 'Pat', last_name: 'Lee', email: 'p@example.com' },
+      session: {}
+    };
+    assert.equal(logic.mayAccessSendNotification(req), true);
+  });
+
+  it('mayAccessSendNotification returns true for staff request', () => {
+    const req = {
+      currentUser: { role: 'staff', first_name: 'Sam', last_name: 'Lee', email: 's@example.com' },
       session: {}
     };
     assert.equal(logic.mayAccessSendNotification(req), true);

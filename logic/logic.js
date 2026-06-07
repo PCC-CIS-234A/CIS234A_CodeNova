@@ -69,12 +69,26 @@ function signupRoleToDbRole(signupRole) {
 }
 
 /**
- * Manages who can send broadcast notifications.
+ * Managers and staff can send broadcast notifications.
  *
  * @param {{normalizedRole?:string, role?:string}|null|undefined} user
  * @returns {boolean}
  */
 function canUserSendNotifications(user) {
+  if (!user) return false;
+  const raw = typeof user.normalizedRole === 'string'
+    ? user.normalizedRole
+    : (user.role != null ? String(user.role).trim().toLowerCase() : '');
+  return raw === ROLE_MANAGER || raw === ROLE_STAFF;
+}
+
+/**
+ * Only managers can create or remove subscriber lists on profile.
+ *
+ * @param {{normalizedRole?:string, role?:string}|null|undefined} user
+ * @returns {boolean}
+ */
+function canUserManageSubscriberLists(user) {
   if (!user) return false;
   const raw = typeof user.normalizedRole === 'string'
     ? user.normalizedRole
@@ -391,6 +405,7 @@ module.exports = {
   getCurrentUser,
   sendBroadcastNotification,
   canUserSendNotifications,
+  canUserManageSubscriberLists,
   pickSignupRoleFromBody,
   /* ----- Saul's code ----- */
   mayAccessSendNotification,
