@@ -103,7 +103,6 @@ class AuthError extends Error {
 /* ----- Saul's code: route guard and sender resolution for Send Notification ----- */
 function mayAccessSendNotification(req) {
   if (req.currentUser && canUserSendNotifications(req.currentUser)) return true;
-  if (!req.currentUser && config.app.devBypassNotifications && req.session && req.session.devBypass) return true;
   return false;
 }
 
@@ -113,20 +112,6 @@ function resolveBroadcastSender(req) {
     return {
       senderName: `${u.first_name} ${u.last_name}`,
       senderEmail: u.email
-    };
-  }
-  if (!u && config.app.devBypassNotifications && req.session && req.session.devBypass) {
-    const senderEmail =
-      config.app.devBypassSenderEmail ||
-      (config.smtp && config.smtp.user ? String(config.smtp.user).trim() : '');
-    if (!senderEmail) {
-      throw new AuthError(
-        'Dev bypass needs DEV_BYPASS_SENDER_EMAIL or SMTP_USER set for the sender reply-to line.'
-      );
-    }
-    return {
-      senderName: config.app.devBypassSenderName,
-      senderEmail
     };
   }
   throw new AuthError('Not authorized to send notifications.');

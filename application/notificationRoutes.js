@@ -5,16 +5,13 @@ const notificationService = require("../logic/notificationService");
 
 // Displays the notification log page.
 router.get("/log", async (req, res) => {
-    // Only logged-in managers/staff — or an active dev bypass session — may view the log.
+    // Only logged-in managers/staff may view the log.
     const user = res.locals.currentUser;
-    const devBypassActive = res.locals.devBypassActive;
-    if (!devBypassActive) {
-        if (!user) return res.redirect('/login');
-        const role = String(user.role || '').trim().toLowerCase();
-        if (role !== 'manager' && role !== 'staff') {
-            req.flash('error', 'You do not have permission to view the notification log.');
-            return res.redirect('/');
-        }
+    if (!user) return res.redirect('/login');
+    const role = String(user.role || '').trim().toLowerCase();
+    if (role !== 'manager' && role !== 'staff') {
+        req.flash('error', 'You do not have permission to view the notification log.');
+        return res.redirect('/');
     }
 
     try {

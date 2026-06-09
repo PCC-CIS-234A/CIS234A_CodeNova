@@ -56,16 +56,12 @@ app.use(flash());
  * that user and attach the safe public shape as both req.currentUser
  * (for routes) and res.locals.currentUser (for views).
  *
- * If the session points at a user that no longer exists -- we deleted
- * them, the DB was wiped, etc. - we clear the session id and just
+ * If the session points at a user that no longer exists, e.g. we deleted
+ * them or the DB was wiped, we clear the session id and just
  * carry on as if they were logged out.
  */
 app.use(async (req, res, next) => {
   res.locals.currentUser = null;
-  /* ----- Saul's code: dev bypass flags for Send Notification ----- */
-  res.locals.devBypassAvailable = config.app.devBypassNotifications;
-  res.locals.devBypassActive = !!(config.app.devBypassNotifications && req.session.devBypass);
-  /* ----- end Saul's code ----- */
   res.locals.messages = {
     success: req.flash('success'),
     error: req.flash('error')
@@ -134,15 +130,6 @@ app.post('/sendNotification', async (req, res) => {
   }
 });
 
-app.get('/dev-bypass', (req, res) => {
-  if (!config.app.devBypassNotifications) {
-    req.flash('error', 'Dev bypass is not enabled on this server.');
-    return res.redirect('/login');
-  }
-  if (req.currentUser) return res.redirect('/sendNotification');
-  req.session.devBypass = true;
-  res.redirect('/sendNotification');
-});
 /* ----- Maeve's code: Notification log route ----- */
 app.use('/notifications', notificationRoutes);
 /* ----- end Maeve's code ----- */
@@ -207,9 +194,6 @@ app.post('/login', async (req, res, next) => {
   try {
     const { userId } = await logic.login(req.body);
     req.session.userId = userId;
-    // Clear any leftover dev-bypass flag so a real login never shows
-    // the dev-bypass banner or inherits bypass-mode access.
-    delete req.session.devBypass;
     res.redirect('/');
   } catch (error) {
     if (error instanceof AuthError) {

@@ -29,13 +29,8 @@
           <button type="submit" class="btn-link">Logout</button>
         </form>
       <% } else { %>
-        <% /* ----- Saul's code ----- */ %>
         <a href="/login">Login</a>
         <a href="/signup">Create Account</a>
-        <% if (typeof devBypassAvailable !== 'undefined' && devBypassAvailable) { %>
-        <a href="/dev-bypass">Dev Bypass</a>
-        <% } %>
-        <% /* ----- end Saul's code ----- */ %>
       <% } %>
     </div>
   </div>

@@ -101,14 +101,16 @@
   </form>
 
   <!--
-    The delete button is a link to /account/delete (a confirmation page),
-    not a destructive POST. The real DELETE happens on the next screen,
-    after the user re-confirms by typing their password.
+    The delete button is only shown to subscribers (students). Managers
+    and staff cannot self-delete from this page.
   -->
+  <% const _role = (locals.currentUser && locals.currentUser.role) ? String(locals.currentUser.role).trim().toLowerCase() : ''; %>
+  <% if (_role !== 'manager' && _role !== 'staff') { %>
   <hr style="border:none;border-top:1px solid #e8ecf2;margin:24px 0;" />
   <h2 style="color:#a12626;text-align:center;margin-bottom:8px;">Danger Zone!</h2>
   <p class="small-text">Deleting your account is permanent and cannot be undone.</p>
   <a href="/account/delete" class="btn btn-danger">Delete My Account</a>
+  <% } %>
 </div>
 
 <script src="/password-toggle.js"></script>
