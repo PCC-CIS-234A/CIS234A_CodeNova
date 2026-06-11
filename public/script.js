@@ -1,7 +1,19 @@
-// Wait until the page fully loads before attaching events.
+/*
+  public/script.js
+
+  Provides client-side functionality for the notification log and archive pages.
+  Handles row selection, notification detail display, message expansion,
+  and table sorting functionality.
+*/
+
+// Wait until the page fully loads before attaching event listeners.
 document.addEventListener("DOMContentLoaded", () => {
 
-    // Function that fills the bottom details box
+    /**
+     * Displays the selected notification's details in the details panel.
+     *
+     * @param {HTMLElement} row The selected notification table row.
+     */
     function showNotificationDetails(row) {
         const detailsContent = document.getElementById("details-content");
 
@@ -14,7 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
     }
 
-    // Clicking the row expands/collapses the message and updates the bottom details box
+    // Handle notification row selection and message expansion.
     document.querySelectorAll(".notification-clickable-row").forEach((row, index) => {
         row.addEventListener("click", function () {
             const detailsContent = document.getElementById("details-content");
@@ -23,6 +35,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const subjectPreview = document.getElementById(`subject-preview-${index}`);
             const subjectFull = document.getElementById(`subject-full-${index}`);
 
+            // Collapse the currently selected row if clicked again.
             if (this.classList.contains("active")) {
                 this.classList.remove("active");
 
@@ -30,6 +43,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     preview.style.display = "inline";
                     full.style.display = "none";
                 }
+
                 if (subjectPreview && subjectFull) {
                     subjectPreview.style.display = "inline";
                     subjectFull.style.display = "none";
@@ -42,6 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
+            // Reset all rows before activating the selected row.
             document.querySelectorAll(".notification-clickable-row").forEach((otherRow, otherIndex) => {
                 otherRow.classList.remove("active");
 
@@ -54,6 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     otherPreview.style.display = "inline";
                     otherFull.style.display = "none";
                 }
+
                 if (otherSubjectPreview && otherSubjectFull) {
                     otherSubjectPreview.style.display = "inline";
                     otherSubjectFull.style.display = "none";
@@ -62,10 +78,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             this.classList.add("active");
 
+            // Show full message and subject content for the selected row.
             if (preview && full) {
                 preview.style.display = "none";
                 full.style.display = "inline";
             }
+
             if (subjectPreview && subjectFull) {
                 subjectPreview.style.display = "none";
                 subjectFull.style.display = "inline";
@@ -75,7 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    // Sort table when clicking column headers
+    // Enable column sorting when table headers are clicked.
     document.querySelectorAll(".sortable-header").forEach(header => {
         header.addEventListener("click", function () {
             const table = this.closest("table");
@@ -87,6 +105,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const rows = Array.from(tbody.querySelectorAll("tr"));
 
+            // Sort numeric, date, or text values automatically.
             rows.sort((a, b) => {
                 const aText = a.children[columnIndex].innerText.trim();
                 const bText = b.children[columnIndex].innerText.trim();
@@ -114,9 +133,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     : bText.localeCompare(aText);
             });
 
+            // Rebuild the table using the sorted rows.
             tbody.innerHTML = "";
             rows.forEach(row => tbody.appendChild(row));
 
+            // Reset sort direction indicators on other headers.
             document.querySelectorAll(".sortable-header").forEach(h => {
                 h.dataset.direction = "";
             });

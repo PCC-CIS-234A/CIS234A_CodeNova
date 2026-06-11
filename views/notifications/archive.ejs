@@ -1,10 +1,22 @@
+<%-
+/*
+  views/notifications/archive.ejs
+
+  Displays the Notification Archive page.
+  Provides filters for date range and search keywords, shows archived notifications
+  in a sortable table, and allows managers to export archive results to Excel.
+*/
+%>
+
 <%- include('../partials/header', { title }) %>
 
 <div class="log-box">
     <h1>Notification Archive</h1>
 
+    <% /* Displays flash messages such as invalid date range errors. */ %>
     <%- include('../partials/flash') %>
 
+    <% /* Filter form for narrowing archived notifications by date range or search term. */ %>
     <form method="GET" action="/notifications/archive" class="filter-bar">
         <div class="filter-field">
             <label class="form-label" for="from">From</label>
@@ -48,6 +60,7 @@
                 Clear
             </a>
 
+            <% /* Managers can export the currently filtered archive results to Excel. */ %>
             <% if (currentUser && currentUser.role === "manager") { %>
                 <a
                         href="/notifications/archive/export?from=<%= filters.from || '' %>&to=<%= filters.to || '' %>&search=<%= filters.search || '' %>"
@@ -59,6 +72,7 @@
         </div>
     </form>
 
+    <% /* Summary count updates based on the current filter results. */ %>
     <p class="log-summary">
         Showing <%= notifications.length %>
         archived notification<%= notifications.length === 1 ? '' : 's' %>.
@@ -72,6 +86,7 @@
 
     <% } else { %>
 
+        <% /* Sortable table of archived notifications. Rows can be clicked for more details. */ %>
         <div class="table-scroll">
             <table class="log-table sortable-table">
                 <thead>
@@ -98,6 +113,7 @@
 
                         <td><%= n.sender_email %></td>
 
+                        <% /* Long subjects are shortened in the table for readability. */ %>
                         <td>
                             <%= n.subject.length > 25
                                     ? n.subject.substring(0, 25) + '...'
@@ -105,6 +121,7 @@
                             %>
                         </td>
 
+                        <% /* Message preview is shortened in the table; full text is available in row data/details. */ %>
                         <td class="log-body">
                             <span id="message-preview-<%= index %>">
                                 <%= n.body.length > 45
@@ -127,6 +144,7 @@
             </table>
         </div>
 
+        <% /* Details box is populated by script.js when a notification row is selected. */ %>
         <div id="notification-details" class="details-box">
             <h2>Notification Details</h2>
 

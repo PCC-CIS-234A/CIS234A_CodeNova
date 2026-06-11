@@ -1,4 +1,10 @@
-// Handles HTTP requests related to notifications.
+/*
+  application/notificationRoutes.js
+
+  Defines routes for viewing, filtering, archiving, and exporting notifications.
+  Handles access control, query parameters, validation, and rendering notification views.
+*/
+
 const express = require("express");
 const router = express.Router();
 const ExcelJS = require("exceljs");
@@ -8,11 +14,18 @@ const archiveService = require("../logic/archiveService");
 const { canUserSendNotifications } = require("../logic/logic");
 const { isInvalidDateRange } = require("../logic/validation");
 
-// Displays the notification log page.
+/**
+ * GET /notifications/log
+ *
+ * Displays the active notification log.
+ * Supports optional date range and search filters.
+ * Accessible to managers and staff unless development bypass is active.
+ */
 router.get("/log", async (req, res) => {
     const user = res.locals.currentUser;
     const devBypassActive = res.locals.devBypassActive;
 
+    // Restrict access to authenticated managers and staff in normal mode.
     if (!devBypassActive) {
         if (!user) return res.redirect("/login");
 
@@ -30,6 +43,7 @@ router.get("/log", async (req, res) => {
         let flash = null;
         let notifications = [];
 
+        // Prevent invalid date filters while still showing the default log.
         if (isInvalidDateRange(from, to)) {
             flash = {
                 type: "error",
@@ -54,11 +68,18 @@ router.get("/log", async (req, res) => {
     }
 });
 
-// Displays the notification archive page.
+/**
+ * GET /notifications/archive
+ *
+ * Displays archived notifications.
+ * Supports optional date range and search filters.
+ * Accessible to managers and staff unless development bypass is active.
+ */
 router.get("/archive", async (req, res) => {
     const user = res.locals.currentUser;
     const devBypassActive = res.locals.devBypassActive;
 
+    // Restrict access to authenticated managers and staff in normal mode.
     if (!devBypassActive) {
         if (!user) return res.redirect("/login");
 
@@ -76,6 +97,7 @@ router.get("/archive", async (req, res) => {
         let flash = null;
         let notifications = [];
 
+        // Prevent invalid date filters while still showing the default archive.
         if (isInvalidDateRange(from, to)) {
             flash = {
                 type: "error",
@@ -100,13 +122,18 @@ router.get("/archive", async (req, res) => {
     }
 });
 
-// Exports the notification archive to Excel.
-// Managers only.
+/**
+ * GET /notifications/archive/export
+ *
+ * Exports filtered archived notifications to an Excel spreadsheet.
+ * Managers only unless development bypass is active.
+ */
 router.get("/archive/export", async (req, res) => {
     const user = res.locals.currentUser;
     const devBypassActive = res.locals.devBypassActive;
 
     try {
+        // Only users with manager-level send permissions may export archive data.
         if (!devBypassActive && !canUserSendNotifications(user)) {
             return res.status(403).send("Access denied. Managers only.");
         }
@@ -119,9 +146,11 @@ router.get("/archive/export", async (req, res) => {
 
         const notifications = await archiveService.getArchivedNotifications(from, to, search);
 
+        // Create workbook and worksheet for the exported archive.
         const workbook = new ExcelJS.Workbook();
         const worksheet = workbook.addWorksheet("Notification Archive");
 
+        // Define column labels, data keys, and readable column widths.
         worksheet.columns = [
             { header: "Date Sent", key: "sent_at_display", width: 25 },
             { header: "Sender", key: "sender_email", width: 30 },
@@ -134,6 +163,7 @@ router.get("/archive/export", async (req, res) => {
             worksheet.addRow(notification);
         });
 
+        // Bold the header row for readability.
         worksheet.getRow(1).font = { bold: true };
 
         res.setHeader(

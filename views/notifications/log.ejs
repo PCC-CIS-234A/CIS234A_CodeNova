@@ -1,10 +1,22 @@
+<%-
+/*
+  views/notifications/log.ejs
+
+  Displays the Notification Log page.
+  Allows users to filter notifications by date range and keyword,
+  view notification details, and access the archive page if authorized.
+*/
+%>
+
 <%- include('../partials/header', { title }) %>
 
 <div class="log-box">
     <h1>Notification Log</h1>
 
+    <% /* Displays success and error messages. */ %>
     <%- include('../partials/flash') %>
 
+    <% /* Filter form for searching notifications by date range and keyword. */ %>
     <form method="GET" action="/notifications/log" class="filter-bar">
         <div class="filter-field">
             <label class="form-label" for="from">From</label>
@@ -48,6 +60,7 @@
                 Clear
             </a>
 
+            <% /* Managers can access the notification archive page. */ %>
             <% if (currentUser && currentUser.role === "manager") { %>
                 <a href="/notifications/archive" class="btn btn-compact">
                     View Archive
@@ -56,6 +69,7 @@
         </div>
     </form>
 
+    <% /* Displays the number of notifications matching the current filters. */ %>
     <p class="log-summary">
         Showing <%= notifications.length %>
         notification<%= notifications.length === 1 ? '' : 's' %><% if (filters.from || filters.to) { %>
@@ -66,6 +80,7 @@
         <div class="log-empty">No notifications match the current filter.</div>
     <% } else { %>
 
+        <% /* Sortable table displaying notification records. */ %>
         <div class="table-scroll">
             <table class="log-table sortable-table">
                 <thead>
@@ -103,6 +118,7 @@
                             </span>
                         </td>
 
+                        <% /* Long message bodies are truncated for readability and expanded when selected. */ %>
                         <td class="log-body">
                             <span id="message-preview-<%= index %>">
                                 <%= n.body.length > 25
@@ -123,6 +139,7 @@
             </table>
         </div>
 
+        <% /* Details panel populated by script.js when a notification row is selected. */ %>
         <div id="notification-details" class="details-box">
             <h2>Notification Details</h2>
 
